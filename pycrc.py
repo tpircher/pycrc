@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
@@ -22,9 +22,10 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 
+"""This is a simple wrapper/executable for the pycrc library."""
 
-from pycrc.main import main
 import sys
+from pycrc.main import main
 
 
 if __name__ == "__main__":

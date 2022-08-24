@@ -190,7 +190,7 @@ class CrcTests(object):
         """
         Compile a generated source file.
         """
-        cmd_str = 'gcc -W -Wall -pedantic -Werror -std={0:s} -o {1:s} {2:s}.c'.format(cstd, binfile, binfile)
+        cmd_str = 'cc -W -Wall -pedantic -Werror -std={0:s} -o {1:s} {2:s}.c'.format(cstd, binfile, binfile)
         if self.verbose:
             print(cmd_str)
         ret = self.__get_status_output(cmd_str)

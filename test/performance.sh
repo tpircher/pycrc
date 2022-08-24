@@ -143,5 +143,5 @@ print_routine "table-driven" tbl >> performance.c
 print_routine "table-driven idx4" tb4 >> performance.c
 print_routine "table-driven sb4" sb4 >> performance.c
 
-gcc -W -Wall -O3 crc_bbb.c crc_bbf.c crc_tbl.c crc_tb4.c crc_sb4.c performance.c
+cc -W -Wall -O3 crc_bbb.c crc_bbf.c crc_tbl.c crc_tb4.c crc_sb4.c performance.c
 ./a.out

@@ -155,11 +155,11 @@ class File(CodeGen):
 
         if opt.action == opt.action_generate_h:
             self.content = self._code_file() + self._header_file()
-        elif opt.action == opt.action_generate_c:
+        if opt.action == opt.action_generate_c:
             self.content = self._code_file() + self._c_file()
-        elif opt.action == opt.action_generate_c_main:
+        if opt.action == opt.action_generate_c_main:
             self.content = self._code_file() + self._c_file() + self._main_file()
-        elif opt.action == opt.action_generate_table:
+        if opt.action == opt.action_generate_table:
             self.content = ['{crc_table_init}'.format(**self.sym)]
 
     def _code_file(self):
@@ -438,7 +438,6 @@ class File(CodeGen):
                 '#include <getopt.h>',
                 Conditional(self.opt, '', self.opt.undefined_crc_parameters, [
                     '#include <stdlib.h>',
-                    '#include <stdio.h>',
                     '#include <ctype.h>',
                     ]),
                 Conditional(self.opt, '', self.opt.c_std != 'C89', [
@@ -458,7 +457,7 @@ class File(CodeGen):
                     ]),
                 '{',
                 CodeGen(self.opt, 4*' ', [
-                    'char format[20];',
+                    'char format[32];',
                     '',
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
                         'sprintf(format, "%%-16s = 0x%%0%dlx\\n", (unsigned int)({cfg_width} + 3) / 4);'.format(**self.sym),
@@ -842,15 +841,15 @@ def _use_reflect_func(opt):
     """
     if opt.reflect_out == None or opt.reflect_in == None:
         return True
-    elif opt.algorithm == opt.algo_table_driven:
+    if opt.algorithm == opt.algo_table_driven:
         if opt.reflect_in != opt.reflect_out:
             return True
-    elif opt.algorithm == opt.algo_bit_by_bit:
+    if opt.algorithm == opt.algo_bit_by_bit:
         if opt.reflect_in:
             return True
         if opt.reflect_out:
             return True
-    elif opt.algorithm == opt.algo_bit_by_bit_fast:
+    if opt.algorithm == opt.algo_bit_by_bit_fast:
         if opt.reflect_in:
             return True
         if opt.reflect_out:
@@ -864,10 +863,9 @@ def _use_static_reflect_func(opt):
     """
     if opt.algorithm == opt.algo_table_driven:
         return False
-    elif opt.reflect_out is not None and opt.algorithm == opt.algo_bit_by_bit_fast:
+    if opt.reflect_out is not None and opt.algorithm == opt.algo_bit_by_bit_fast:
         return False
-    else:
-        return True
+    return True
 
 
 def _use_crc_table_gen(opt):
@@ -897,7 +895,7 @@ def _use_cfg_in_crc_update(opt):
     if opt.algorithm in set([opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast]):
         if opt.width is not None and opt.poly is not None and opt.reflect_in is not None:
             return True
-    elif opt.algorithm == opt.algo_table_driven:
+    if opt.algorithm == opt.algo_table_driven:
         if opt.width is not None and opt.reflect_in is not None:
             return True
     return False
@@ -920,10 +918,10 @@ def _use_cfg_in_finalize(opt):
     if opt.algorithm == opt.algo_bit_by_bit:
         if opt.width is not None and opt.poly is not None and opt.reflect_out is not None and opt.xor_out is not None:
             return True
-    elif opt.algorithm == opt.algo_bit_by_bit_fast:
+    if opt.algorithm == opt.algo_bit_by_bit_fast:
         if opt.width is not None and opt.reflect_out is not None and opt.xor_out is not None:
             return True
-    elif opt.algorithm == opt.algo_table_driven:
+    if opt.algorithm == opt.algo_table_driven:
         if opt.width is not None and opt.reflect_in is not None and opt.reflect_out is not None and opt.xor_out is not None:
             return True
     return False
@@ -970,11 +968,10 @@ def _crc_final_value(opt, sym):
         else:
             reflect_fun = expr.FunctionCall(sym['crc_reflect_function'], ['crc', sym['crc_width']])
             return expr.Xor(reflect_fun, sym['crc_xor_out']).simplify()
-    elif opt.reflect_out:
+    if opt.reflect_out:
         reflect_fun = expr.FunctionCall(sym['crc_reflect_function'], ['crc', sym['crc_width']])
         return expr.Xor(reflect_fun, sym['crc_xor_out']).simplify()
-    else:
-        return expr.Xor('crc', sym['crc_xor_out']).simplify()
+    return expr.Xor('crc', sym['crc_xor_out']).simplify()
 
 
 def _crc_table(opt, sym):

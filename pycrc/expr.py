@@ -35,9 +35,9 @@ def _classify(val):
     """
     Creates a Terminal object if the parameter is a string or an integer.
     """
-    if type(val) is int:
+    if isinstance(val, int):
         return Terminal(val)
-    if type(val) is str:
+    if isinstance(val, str):
         if val.isdigit():
             return Terminal(int(val), val)
         if val[:2].lower() == '0x':
@@ -46,11 +46,12 @@ def _classify(val):
     return val
 
 
-class Expression(object):
+class Expression():
     """
     Base class for all expressions.
     """
     def is_int(self, val = None):
+        """Dummy function, always returns False. This is overwritten bu derived classes."""
         return False
 
 
@@ -86,7 +87,7 @@ class Terminal(Expression):
         """
         Return True if the value of this Terminal is an integer.
         """
-        if type(self.val) is int:
+        if isinstance(self.val, int):
             return val is None or self.val == val
         return False
 
@@ -131,7 +132,7 @@ class Parenthesis(Expression):
         Return a simplified version of this sub-expression.
         """
         val = self.val.simplify()
-        if type(val) is Terminal:
+        if isinstance(val, Terminal):
             return val
         return Parenthesis(val)
 

@@ -28,14 +28,7 @@ This program doesn't need to be installed to be called. The script can be
 executed from the source directory.
 Simply call the python interpreter with the script as parameter:
 
-    python pycrc.py [options]
-
-On a UNIX-like system, you can make the pycrc.py wrapper script executable and
-call it like a normal binary:
-
-    chmod +x pycrc.py
-    ./pycrc.py [options]
-
+    python3 ./pycrc.py [options]
 
 Installation
 ============

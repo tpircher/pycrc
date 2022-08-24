@@ -39,6 +39,12 @@ from pycrc.algorithms import Crc
 import collections
 import time
 import os
+import sys
+
+if sys.version_info.major == 3 and sys.version_info.minor >= 10:
+    from collections.abc import MutableMapping
+else:
+    from collections import MutableMapping
 
 
 class SymbolTable(object):
@@ -46,7 +52,7 @@ class SymbolTable(object):
         self.opt = opt
 
 
-class SymbolTable(collections.MutableMapping):
+class SymbolTable(MutableMapping):
     """A dictionary that applies an arbitrary key-altering
        function before accessing the keys"""
 

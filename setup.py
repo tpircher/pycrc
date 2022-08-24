@@ -1,8 +1,10 @@
+"""Install pycrc"""
+
 from distutils.core import setup
 
 from pycrc import progname, version, url
 
-setup(name = 'pycrc',
+setup(name = progname,
         version = version,
         description = 'Free, easy to use Cyclic Redundancy Check source code generator for C/C++',
         author = 'Thomas Pircher',

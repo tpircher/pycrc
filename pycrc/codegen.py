@@ -1223,7 +1223,7 @@ def _crc_update_function_gen(opt, sym):
         out += [
                 CodeGen(opt, 4*' ', [
                     'unsigned int i;',
-                    '{c_bool} bit;'.format(**sym),
+                    '{crc_t} bit;'.format(**sym),
                     'unsigned char c;',
                     '',
                     'while (data_len--) {',
@@ -1247,16 +1247,9 @@ def _crc_update_function_gen(opt, sym):
                             'for (i = 0x80; i > 0; i >>= 1) {',
                             ]),
                         CodeGen(opt, 4*' ', [
-                            Conditional2(opt, '', opt.c_std == 'C89', [
-                                'bit = !!({0});'.format(expr.And('crc', sym['cfg_msb_mask']).simplify()),
-                                ], [
-                                'bit = {0};'.format(expr.And('crc', sym['cfg_msb_mask']).simplify()),
-                                ]),
-                            'if (c & i) {',
-                            CodeGen(opt, 4*' ', [
-                                'bit = !bit;',
-                                ]),
-                            '}',
+                            'bit = ({0}) ^ ({1});'.format(
+                                expr.And('crc', sym['cfg_msb_mask']).simplify(),
+                                '(c & i) ? {0} : 0'.format(sym['cfg_msb_mask'])),
                             'crc <<= 1;',
                             'if (bit) {',
                             CodeGen(opt, 4*' ', [

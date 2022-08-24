@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
+## [v0.9.3] - unreleased
+
+### Fixed
+- Fix compatibility with Python 3.10.
+  Fixes #46.
+- Slightly improved the performance of the bit-by-bit-fast algorithm.
+
+
 ## [v0.9.2] - 2019-02-06
 
 ### Fixed

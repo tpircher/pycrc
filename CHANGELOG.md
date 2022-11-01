@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
-## [v0.9.3] - unreleased
+## [v0.9.3] - 2022-11-01
 
 ### Fixed
 - Fix compatibility with Python 3.10.

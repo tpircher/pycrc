@@ -488,6 +488,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 [Unreleased]: https://github.com/tpircher/pycrc
+[v0.9.3]: https://github.com/tpircher/pycrc/releases/tag/v0.9.3
 [v0.9.2]: https://github.com/tpircher/pycrc/releases/tag/v0.9.2
 [v0.9.1]: https://github.com/tpircher/pycrc/releases/tag/v0.9.1
 [v0.9]: https://github.com/tpircher/pycrc/releases/tag/v0.9

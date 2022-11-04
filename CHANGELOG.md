@@ -7,8 +7,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v0.10.0] - unreleased
 
+### Added
+
+- Use pytest for regression tests
+- Update to pyproject.toml for packaging
+
 ### Removed
-- pycrc has removed Python 2 compatibility
+
+- Removed Python 2 compatibility. Use pycrc v0.9.x if Python 2 is required.
+
+### Fixed
+
+- The xor-in value is never reflected
+  Thanks to Ralf Schlatterbeck 
+
 
 ## [v0.9.3] - 2022-11-01
 
@@ -16,6 +28,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fix compatibility with Python 3.10.
   Fixes #46.
 - Slightly improved the performance of the bit-by-bit-fast algorithm.
+
 
 ## [v0.9.2] - 2019-02-06
 
@@ -492,6 +505,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 [Unreleased]: https://github.com/tpircher/pycrc
+[v0.10.0]: https://github.com/tpircher/pycrc/releases/tag/v0.10.0
 [v0.9.3]: https://github.com/tpircher/pycrc/releases/tag/v0.9.3
 [v0.9.2]: https://github.com/tpircher/pycrc/releases/tag/v0.9.2
 [v0.9.1]: https://github.com/tpircher/pycrc/releases/tag/v0.9.1

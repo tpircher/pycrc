@@ -17,25 +17,26 @@ source code generator.
 System Requirements
 ===================
 
-pycrc requires Python 2.6 or later. Python 3.x is supported.
-The last version compatible with Python 2.4 is pycrc v0.7.10.
-
+Python3 is required to run pycrc.
+The last version compatible with Python 2 is v0.9.x.
 
 Running pycrc
 =============
 
-This program doesn't need to be installed to be called. The script can be
+This program doesn't need to be installed to be run. The script can be
 executed from the source directory.
 Simply call the python interpreter with the script as parameter:
 
-    python3 ./pycrc.py [options]
+    python3 src/pycrc.py [options]
 
 Installation
 ============
 
-Install pycrc (if required) using the setup.py script:
+Install pycrc (if required) using pip:
 
-    python setup.py install
+    python3 -m pip install pycrc
+
+This will install a `pycrc` binary in the path.
 
 
 Getting help

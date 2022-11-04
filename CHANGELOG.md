@@ -5,13 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
+## [v0.10.0] - unreleased
+
+### Removed
+- pycrc has removed Python 2 compatibility
+
 ## [v0.9.3] - 2022-11-01
 
 ### Fixed
 - Fix compatibility with Python 3.10.
   Fixes #46.
 - Slightly improved the performance of the bit-by-bit-fast algorithm.
-
 
 ## [v0.9.2] - 2019-02-06
 

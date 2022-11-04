@@ -3,8 +3,10 @@
 *.pyc
 *.pyo
 __pycache__
-build
-doc/pycrc.1
-doc/pycrc.html
-doc/docbook.css
-test/pycrc_files.tar.gz
+/src/pycrc.egg-info
+/dist
+/build
+/doc/pycrc.1
+/doc/pycrc.html
+/doc/docbook.css
+/test/pycrc_files.tar.gz

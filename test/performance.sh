@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-PYCRC=`dirname $0`/../pycrc.py
+PYCRC=`dirname $0`/../src/pycrc.py
 
 cleanup() {
     rm -f a.out performance.c crc_bbb.[ch] crc_bbf.[ch] crc_tb[l4].[ch] crc_sb4.[ch]

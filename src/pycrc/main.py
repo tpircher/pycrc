@@ -40,13 +40,15 @@ It supports the following CRC algorithms:
 """
 
 from __future__ import print_function
-from pycrc import progname, version, url
+from pycrc import __version__
 from pycrc.opt import Options
 from pycrc.algorithms import Crc
 import pycrc.codegen as cg
 import binascii
 import sys
 
+progname = "pycrc"
+url = 'https://pycrc.org'
 
 
 def print_parameters(opt):
@@ -113,8 +115,7 @@ def check_hexstring(opt):
         sys.exit(1)
     if len(opt.check_string) % 2 != 0:
         opt.check_string = "0" + opt.check_string
-    if sys.version_info >= (3, 0):
-        opt.check_string = bytes(opt.check_string, 'utf_8')
+    opt.check_string = bytes(opt.check_string, 'utf_8')
     try:
         check_str = bytearray(binascii.unhexlify(opt.check_string))
     except TypeError:
@@ -200,7 +201,7 @@ def main():
     """
     Main function.
     """
-    opt = Options(progname, version, url)
+    opt = Options(progname, __version__, url)
     opt.parse(sys.argv[1:])
     if opt.verbose:
         print(print_parameters(opt))

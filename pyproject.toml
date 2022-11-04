@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycrc"
+version = "0.9.3"
+authors = [
+  { name="Thomas Pircher", email="tehpeh-web@tty1.net" },
+]
+description = "A free, easy to use Cyclic Redundancy Check source code generator for C/C++"
+readme = "README.md"
+requires-python = ">=3.0"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://pycrc.org"
+"Bug Tracker" = "https://github.com/tpircher/pycrc/issues"
+
+[project.scripts]
+pycrc = "pycrc.main:main"

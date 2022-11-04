@@ -842,6 +842,8 @@ def _use_reflect_func(opt):
     if opt.reflect_out == None or opt.reflect_in == None:
         return True
     if opt.algorithm == opt.algo_table_driven:
+        if opt.reflect_in and opt.reflect_out:
+            return True
         if opt.reflect_in != opt.reflect_out:
             return True
     if opt.algorithm == opt.algo_bit_by_bit:
@@ -1057,7 +1059,7 @@ def _crc_table_gen(opt, sym):
                             '}',
                             ]),
                         Conditional(opt, '', opt.reflect_in, [
-                            Conditional2(opt, 4*' ', sym.tbl_shift is None or sym.tbl_shift > 0, [
+                            Conditional2(opt, '', sym.tbl_shift is None or sym.tbl_shift > 0, [
                                 'crc = {0};'.format(expr.Shl(expr.FunctionCall(sym['crc_reflect_function'], [expr.Shr('crc', sym['cfg_shift']), sym['cfg_width']]), sym['cfg_shift']).simplify()),
                                 ], [
                                 'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
@@ -1383,9 +1385,9 @@ def _crc_finalize_function_gen(opt, sym):
             if opt.reflect_in is None and opt.reflect_out is None:
                 cond = 'cfg->reflect_in != cfg->reflect_out'
             elif opt.reflect_out is None:
-                cond = '!' if opt.reflect_in else '' + 'cfg->reflect_out'
+                cond = ('!' if opt.reflect_in else '') + 'cfg->reflect_out'
             else:
-                cond = '!' if opt.reflect_out else '' + 'cfg->reflect_in'
+                cond = ('!' if opt.reflect_out else '') + 'cfg->reflect_in'
             out += [
                     CodeGen(opt, 4*' ', [
                         'if (' + cond + ') {',

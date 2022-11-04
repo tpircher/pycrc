@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-PYCRC=`dirname $0`/../pycrc.py
+PYCRC=`dirname $0`/../src/pycrc.py
 outdir_old="/tmp/pycrc_out"
 outdir_new="/tmp/pycrc_new"
 tarfile="pycrc_files.tar.gz"
@@ -67,7 +67,7 @@ generate() {
 populate() {
     outdir=$1
     mkdir -p "$outdir"
-    models=`PYTHONPATH=.. python -c 'import pycrc.models as m; print(" ".join(m.CrcModels().names()))'`
+    models=`PYTHONPATH=.. python3 -c 'import src.pycrc.models as m; print(" ".join(m.CrcModels().names()))'`
     for model in "undefined" $models; do
         for algo in "bbb" "bbf" "tbl"; do
             for cstd in c98 c99; do

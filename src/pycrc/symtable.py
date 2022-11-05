@@ -31,115 +31,79 @@ use as follows:
     opt = opt.Options()
     sym = sym.SymbolTable(opt)
 
-    print(sym['crc_width'])
-    print('width: {crc_width}, poly: {crc_poly}'.format(**sym))
+    print(sym.crc_width)
+    print(f'width: {sym.crc_width}, poly: {sym.crc_poly}')
 """
 
 from pycrc.algorithms import Crc
-import collections
 import time
 import os
-import sys
-
-if sys.version_info.major == 3 and sys.version_info.minor >= 10:
-    from collections.abc import MutableMapping
-else:
-    from collections import MutableMapping
 
 
-class SymbolTable(object):
-    def __init__(self, opt):
-        self.opt = opt
-
-
-class SymbolTable(MutableMapping):
-    """A dictionary that applies an arbitrary key-altering
-       function before accessing the keys"""
+class SymbolTable:
+    """
+    A class with the symbols as public members.
+    """
 
     def __init__(self, opt):
-        self.opt = opt
+        self._opt = opt
         self.tbl_shift = _tbl_shift(opt)
-        self.cache = dict()
-        self.generator = dict({
-            'datetime': lambda: time.asctime(),
-            'program_version': lambda: self.opt.version_str,
-            'program_url': lambda: self.opt.web_address,
-            'filename': lambda: 'pycrc_stdout' if self.opt.output_file is None else os.path.basename(self.opt.output_file),
-            'header_filename': lambda: _pretty_header_filename(self.opt.output_file),
-            'header_protection': lambda: _pretty_hdrprotection(self.opt),
 
-            'crc_algorithm': lambda: _pretty_algorithm(self.opt),
-            'crc_width': lambda: _pretty_str(self.opt.width),
-            'crc_poly': lambda: _pretty_hex(self.opt.poly, self.opt.width),
-            'crc_reflect_in': lambda: _pretty_bool(self.opt.reflect_in),
-            'crc_xor_in': lambda: _pretty_hex(self.opt.xor_in, self.opt.width),
-            'crc_reflect_out': lambda: _pretty_bool(self.opt.reflect_out),
-            'crc_xor_out': lambda: _pretty_hex(self.opt.xor_out, self.opt.width),
-            'crc_slice_by': lambda: _pretty_str(self.opt.slice_by),
-            'crc_table_idx_width': lambda: str(self.opt.tbl_idx_width),
-            'crc_table_width': lambda: _pretty_str(1 << self.opt.tbl_idx_width),
-            'crc_table_mask': lambda: _pretty_hex(self.opt.tbl_width - 1, 8),
-            'crc_mask': lambda: _pretty_hex(self.opt.mask, self.opt.width),
-            'crc_msb_mask': lambda: _pretty_hex(self.opt.msb_mask, self.opt.width),
-            'crc_shift': lambda: _pretty_str(self.tbl_shift),
+        self.datetime = time.asctime()
+        self.program_version = self._opt.version_str
+        self.program_url = self._opt.web_address
+        self.filename = 'pycrc_stdout' if self._opt.output_file is None else os.path.basename(self._opt.output_file)
+        self.header_filename = _pretty_header_filename(self._opt.output_file)
+        self.header_protection = _pretty_hdrprotection(self._opt)
 
-            'cfg_width': lambda: self.__getitem__('crc_width') if self.opt.width is not None else 'cfg->width',
-            'cfg_poly': lambda: self.__getitem__('crc_poly') if self.opt.poly is not None else 'cfg->poly',
-            'cfg_reflect_in': lambda: self.__getitem__('crc_reflect_in') if self.opt.reflect_in is not None else 'cfg->reflect_in',
-            'cfg_xor_in': lambda: self.__getitem__('crc_xor_in') if self.opt.xor_in is not None else 'cfg->xor_in',
-            'cfg_reflect_out': lambda: self.__getitem__('crc_reflect_out') if self.opt.reflect_out is not None else 'cfg->reflect_out',
-            'cfg_xor_out': lambda: self.__getitem__('crc_xor_out') if self.opt.xor_out is not None else 'cfg->xor_out',
-            'cfg_table_idx_width': lambda: self.__getitem__('crc_table_idx_width') if self.opt.tbl_idx_width is not None else 'cfg->table_idx_width',
-            'cfg_table_width': lambda: self.__getitem__('crc_table_width') if self.opt.tbl_width is not None else 'cfg->table_width',
-            'cfg_mask': lambda: self.__getitem__('crc_mask') if self.opt.mask is not None else 'cfg->crc_mask',
-            'cfg_msb_mask': lambda: self.__getitem__('crc_msb_mask') if self.opt.msb_mask is not None else 'cfg->msb_mask',
-            'cfg_shift': lambda: self.__getitem__('crc_shift') if self.tbl_shift is not None else 'cfg->crc_shift',
-            'cfg_poly_shifted': lambda: '('+self.__getitem__('cfg_poly')+' << '+self.__getitem__('cfg_shift')+')' if self.tbl_shift is None or self.tbl_shift > 0 else self.__getitem__('cfg_poly'),
-            'cfg_mask_shifted': lambda: '('+self.__getitem__('cfg_mask')+' << '+self.__getitem__('cfg_shift')+')' if self.tbl_shift is None or self.tbl_shift > 0 else self.__getitem__('cfg_mask'),
-            'cfg_msb_mask_shifted': lambda: '('+self.__getitem__('cfg_msb_mask')+' << '+self.__getitem__('cfg_shift')+')' if self.tbl_shift is None or self.tbl_shift > 0 else self.__getitem__('cfg_msb_mask'),
+        self.crc_algorithm = _pretty_algorithm(self._opt)
+        self.crc_width = _pretty_str(self._opt.width)
+        self.crc_poly = _pretty_hex(self._opt.poly, self._opt.width)
+        self.crc_reflect_in = _pretty_bool(self._opt.reflect_in)
+        self.crc_xor_in = _pretty_hex(self._opt.xor_in, self._opt.width)
+        self.crc_reflect_out = _pretty_bool(self._opt.reflect_out)
+        self.crc_xor_out = _pretty_hex(self._opt.xor_out, self._opt.width)
+        self.crc_slice_by = _pretty_str(self._opt.slice_by)
+        self.crc_table_idx_width = str(self._opt.tbl_idx_width)
+        self.crc_table_width = _pretty_str(1 << self._opt.tbl_idx_width)
+        self.crc_table_mask = _pretty_hex(self._opt.tbl_width - 1, 8)
+        self.crc_mask = _pretty_hex(self._opt.mask, self._opt.width)
+        self.crc_msb_mask = _pretty_hex(self._opt.msb_mask, self._opt.width)
+        self.crc_shift = _pretty_str(self.tbl_shift)
 
-            'c_bool': lambda: 'int' if self.opt.c_std == 'C89' else 'bool',
-            'c_true': lambda: '1' if self.opt.c_std == 'C89' else 'true',
-            'c_false': lambda: '0' if self.opt.c_std == 'C89' else 'false',
+        self.cfg_width = self.crc_width if self._opt.width is not None else 'cfg->width'
+        self.cfg_poly = self.crc_poly if self._opt.poly is not None else 'cfg->poly'
+        self.cfg_reflect_in = self.crc_reflect_in if self._opt.reflect_in is not None else 'cfg->reflect_in'
+        self.cfg_xor_in = self.crc_xor_in if self._opt.xor_in is not None else 'cfg->xor_in'
+        self.cfg_reflect_out = self.crc_reflect_out if self._opt.reflect_out is not None else 'cfg->reflect_out'
+        self.cfg_xor_out = self.crc_xor_out if self._opt.xor_out is not None else 'cfg->xor_out'
+        self.cfg_table_idx_width = self.crc_table_idx_width if self._opt.tbl_idx_width is not None else 'cfg->table_idx_width'
+        self.cfg_table_width = self.crc_table_width if self._opt.tbl_width is not None else 'cfg->table_width'
+        self.cfg_mask = self.crc_mask if self._opt.mask is not None else 'cfg->crc_mask'
+        self.cfg_msb_mask = self.crc_msb_mask if self._opt.msb_mask is not None else 'cfg->msb_mask'
+        self.cfg_shift = self.crc_shift if self.tbl_shift is not None else 'cfg->crc_shift'
+        self.cfg_poly_shifted = '(' + self.cfg_poly + ' << ' + self.cfg_shift + ')' \
+                                if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_poly
+        self.cfg_mask_shifted = '(' + self.cfg_mask + ' << ' + self.cfg_shift + ')' \
+                                if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_mask
+        self.cfg_msb_mask_shifted = '(' + self.cfg_msb_mask + ' << ' + self.cfg_shift + ')' \
+                                    if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_msb_mask
 
-            'underlying_crc_t': lambda: _get_underlying_crc_t(self.opt),
-            'crc_t': lambda: self.opt.symbol_prefix + 't',
-            'cfg_t': lambda: self.opt.symbol_prefix + 'cfg_t',
-            'crc_reflect_function': lambda: self.opt.symbol_prefix + 'reflect',
-            'crc_table_gen_function': lambda: self.opt.symbol_prefix + 'table_gen',
-            'crc_init_function': lambda: self.opt.symbol_prefix + 'init',
-            'crc_update_function': lambda: self.opt.symbol_prefix + 'update',
-            'crc_finalize_function': lambda: self.opt.symbol_prefix + 'finalize',
+        self.c_bool = 'int' if self._opt.c_std == 'C89' else 'bool'
+        self.c_true = '1' if self._opt.c_std == 'C89' else 'true'
+        self.c_false = '0' if self._opt.c_std == 'C89' else 'false'
 
-            'crc_init_value': lambda: _get_init_value(self.opt),
-            'crc_table_init': lambda: _get_table_init(self.opt),
-        })
+        self.underlying_crc_t = _get_underlying_crc_t(self._opt)
+        self.crc_t = self._opt.symbol_prefix + 't'
+        self.cfg_t = self._opt.symbol_prefix + 'cfg_t'
+        self.crc_reflect_function = self._opt.symbol_prefix + 'reflect'
+        self.crc_table_gen_function = self._opt.symbol_prefix + 'table_gen'
+        self.crc_init_function = self._opt.symbol_prefix + 'init'
+        self.crc_update_function = self._opt.symbol_prefix + 'update'
+        self.crc_finalize_function = self._opt.symbol_prefix + 'finalize'
 
-    def __getitem__(self, key):
-        """
-        Return the value for the requested key
-        """
-        if key in self.cache:
-            return self.cache[key]
-        if key not in self.generator:
-            raise KeyError(key)
-        generator = self.generator[key]
-        val = self.generator[key]()
-        self.cache[key] = val
-        return val
-
-    def __setitem__(self, key, value):
-        self.generator[key] = value
-
-    def __delitem__(self, key):
-        del self.generator[key]
-
-    def __iter__(self):
-        return iter(self.generator)
-
-    def __len__(self):
-        return len(self.generator)
-
+        self.crc_init_value = _get_init_value(self._opt)
+        self.crc_table_init = _get_table_init(self._opt)
 
 
 def _pretty_str(value):
@@ -186,6 +150,7 @@ def _pretty_algorithm(opt):
     else:
         return 'UNDEFINED'
 
+
 def _pretty_header_filename(filename):
     """
     Return the sanitized filename of a header file.
@@ -211,11 +176,11 @@ def _pretty_hdrprotection(opt):
     return out_str
 
 
-def _get_underlying_crc_t(opt):
+def _get_underlying_crc_t(opt):     # noqa: C901
+    # pylint: disable=too-many-return-statements, too-many-branches
     """
     Return the C type of the crc_t typedef.
     """
-    # pylint: disable=too-many-return-statements, too-many-branches
 
     if opt.crc_type is not None:
         return opt.crc_type
@@ -224,25 +189,23 @@ def _get_underlying_crc_t(opt):
             return 'unsigned long int'
         if opt.width <= 8:
             return 'unsigned char'
-        elif opt.width <= 16:
+        if opt.width <= 16:
             return 'unsigned int'
-        else:
-            return 'unsigned long int'
+        return 'unsigned long int'
     else:   # C99
         if opt.width is None:
             return 'unsigned long long int'
         if opt.width <= 8:
             return 'uint_fast8_t'
-        elif opt.width <= 16:
+        if opt.width <= 16:
             return 'uint_fast16_t'
-        elif opt.width <= 32:
+        if opt.width <= 32:
             return 'uint_fast32_t'
-        elif opt.width <= 64:
+        if opt.width <= 64:
             return 'uint_fast64_t'
-        elif opt.width <= 128:
+        if opt.width <= 128:
             return 'uint_fast128_t'
-        else:
-            return 'uintmax_t'
+        return 'uintmax_t'
 
 
 def _get_init_value(opt):
@@ -355,4 +318,3 @@ def _tbl_shift(opt):
             return 8 - opt.width
     else:
         return 0
-

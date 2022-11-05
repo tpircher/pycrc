@@ -64,7 +64,7 @@ def check_string(opt):
     """
     error = False
     if opt.undefined_crc_parameters:
-        sys.stderr.write("{0:s}: error: undefined parameters\n".format(progname))
+        sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
     if opt.algorithm == 0:
         opt.algorithm = opt.algo_bit_by_bit | opt.algo_bit_by_bit_fast | opt.algo_table_driven
@@ -78,30 +78,27 @@ def check_string(opt):
     crc = None
     if opt.algorithm & opt.algo_bit_by_bit:
         bbb_crc = alg.bit_by_bit(opt.check_string)
-        if crc != None and bbb_crc != crc:
-            error = True
+        error |= crc is not None and bbb_crc != crc
         crc = bbb_crc
     if opt.algorithm & opt.algo_bit_by_bit_fast:
         bbf_crc = alg.bit_by_bit_fast(opt.check_string)
-        if crc != None and bbf_crc != crc:
-            error = True
+        error |= crc is not None and bbf_crc != crc
         crc = bbf_crc
     if opt.algorithm & opt.algo_table_driven:
         # no point making the python implementation slower by using less than 8 bits as index.
         opt.tbl_idx_width = 8
         tbl_crc = alg.table_driven(opt.check_string)
-        if crc != None and tbl_crc != crc:
-            error = True
+        error |= crc is not None and tbl_crc != crc
         crc = tbl_crc
 
     if error:
-        sys.stderr.write("{0:s}: error: different checksums!\n".format(progname))
+        sys.stderr.write(f"{progname:s}: error: different checksums!\n")
         if opt.algorithm & opt.algo_bit_by_bit:
-            sys.stderr.write("       bit-by-bit:        {0:#x}\n".format(bbb_crc))
+            sys.stderr.write(f"       bit-by-bit:        {bbb_crc:#x}\n")
         if opt.algorithm & opt.algo_bit_by_bit_fast:
-            sys.stderr.write("       bit-by-bit-fast:   {0:#x}\n".format(bbf_crc))
+            sys.stderr.write(f"       bit-by-bit-fast:   {bbf_crc:#x}\n")
         if opt.algorithm & opt.algo_table_driven:
-            sys.stderr.write("       table_driven:      {0:#x}\n".format(tbl_crc))
+            sys.stderr.write(f"       table_driven:      {tbl_crc:#x}\n")
         sys.exit(1)
     return crc
 
@@ -169,10 +166,10 @@ def check_file(opt):
 
     try:
         with open(opt.check_file, 'rb') as f:
-            check_bytes = bytearray(f.read(1024))
+            check_bytes = bytearray(f.read(4096))
             while check_bytes != b"":
                 register = crc_file_update(alg, register, check_bytes)
-                check_bytes = bytearray(f.read(1024))
+                check_bytes = bytearray(f.read(4096))
     except IOError:
         sys.stderr.write(
             "{0:s}: error: can't open file {1:s}\n".format(progname, opt.check_file))
@@ -218,7 +215,7 @@ def main():
             opt.action_generate_h, opt.action_generate_c, opt.action_generate_c_main,
             opt.action_generate_table]):
         out = str(cg.File(opt, ''))
-        if opt.output_file == None:
+        if opt.output_file is None:
             print(out)
         else:
             write_file(opt.output_file, out)

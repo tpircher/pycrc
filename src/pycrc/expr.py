@@ -50,7 +50,7 @@ class Expression():
     """
     Base class for all expressions.
     """
-    def is_int(self, val = None):
+    def is_int(self, val=None):
         """Dummy function, always returns False. This is overwritten bu derived classes."""
         return False
 
@@ -59,7 +59,7 @@ class Terminal(Expression):
     """
     A terminal object.
     """
-    def __init__(self, val, pretty = None):
+    def __init__(self, val, pretty=None):
         """
         Construct a Terminal.
         The val variable is usually a string or an integer. Integers may also
@@ -83,7 +83,7 @@ class Terminal(Expression):
         """
         return self
 
-    def is_int(self, val = None):
+    def is_int(self, val=None):
         """
         Return True if the value of this Terminal is an integer.
         """

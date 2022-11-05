@@ -45,6 +45,7 @@ This is an example use of the different algorithms:
     print("{0:#x}".format(crc.table_driven("123456789")))
 """
 
+
 class Crc():
     """
     A base class for CRC routines.
@@ -52,8 +53,9 @@ class Crc():
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, width, poly, reflect_in, xor_in, reflect_out, xor_out,
-            table_idx_width=None, slice_by=1):
-        """The Crc constructor.
+                 table_idx_width=None, slice_by=1):
+        """
+        Create a CRC object, using the Rocksoft model.
 
         The parameters are as follows:
             width
@@ -89,7 +91,6 @@ class Crc():
         else:
             self.crc_shift = 0
 
-
     def __get_nondirect_init(self, init):
         """
         return the non-direct init if the direct algorithm has been selected.
@@ -104,7 +105,6 @@ class Crc():
                 crc |= self.msb_mask
         return crc & self.mask
 
-
     def reflect(self, data, width):
         """
         reflect a data word, i.e. reverts the bit order.
@@ -116,7 +116,6 @@ class Crc():
             data >>= 1
             res = (res << 1) | (data & 0x01)
         return res
-
 
     def bit_by_bit(self, in_data):
         """
@@ -148,7 +147,6 @@ class Crc():
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-
     def bit_by_bit_fast(self, in_data):
         """
         This is a slightly modified version of the bit-by-bit algorithm: it
@@ -174,7 +172,6 @@ class Crc():
         if self.reflect_out:
             reg = self.reflect(reg, self.width)
         return reg ^ self.xor_out
-
 
     def gen_table(self):
         """
@@ -204,7 +201,6 @@ class Crc():
                 tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xff]
         return tbl
 
-
     def table_driven(self, in_data):
         """
         The Standard table_driven CRC algorithm.
@@ -221,7 +217,8 @@ class Crc():
             reg = self.direct_init << self.crc_shift
             for octet in in_data:
                 tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xff
-                reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^ (tbl[0][tblidx] << self.crc_shift)) & (self.mask << self.crc_shift)
+                reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^
+                       (tbl[0][tblidx] << self.crc_shift)) & (self.mask << self.crc_shift)
             reg = reg >> self.crc_shift
         else:
             reg = self.reflect(self.direct_init, self.width)

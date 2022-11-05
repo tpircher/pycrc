@@ -59,8 +59,8 @@ class TestCodeGen:
     def test_incomplete_models_tbl_c99(self):
         params = ['width', 'poly', 'xor_in', 'reflect_in', 'xor_out', 'reflect_out']
         for n in range(len(params)):
-            for l in itertools.combinations(params, n):
-                compile_and_test_incomplete_models('tbl', 'c99', l)
+            for c in itertools.combinations(params, n):
+                compile_and_test_incomplete_models('tbl', 'c99', c)
 
     def test_special_cases(self):
         compile_and_run_special_cases()
@@ -76,9 +76,11 @@ def run_cmd(cmd):
     ret = subprocess.run(cmd, check=True, capture_output=True)
     return ret
 
+
 def run_pycrc(args):
     ret = run_cmd(['python3', 'src/pycrc.py'] + args)
     return ret.stdout.decode('utf-8').rstrip()
+
 
 def gen_src(tmpdir, args, name):
     src_h = os.path.join(tmpdir, f'{name}.h')
@@ -89,11 +91,13 @@ def gen_src(tmpdir, args, name):
     gen = ['--generate', 'c-main', '-o', src_c]
     run_pycrc(gen + args)
 
+
 def compile_and_run(tmpdir, compile_args, run_args, name, check):
     gen_src(tmpdir, compile_args, name)
     binary = os.path.join(tmpdir, 'a.out')
     compile_src(binary, os.path.join(tmpdir, name + '.c'))
     run_and_check_res([binary] + run_args, check)
+
 
 def compile_and_test_models(algo, cstd, opt_args=[]):
     with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
@@ -105,6 +109,7 @@ def compile_and_test_models(algo, cstd, opt_args=[]):
             args += ['--algorithm', algo, '--std', cstd]
             args += opt_args
             compile_and_run(tmpdir, args, [], m['name'], m['check'])
+
 
 def compile_and_test_incomplete_models(algo, cstd, erase_params=[]):
     if cstd == 'c89':
@@ -120,11 +125,14 @@ def compile_and_test_incomplete_models(algo, cstd, erase_params=[]):
             run_args = args_from_model({param: model[param] for param in erase_params})
             compile_and_run(tmpdir, args, run_args, f'{m["name"]}_incomplete', m['check'])
 
+
 def compile_and_run_special_cases():
     with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
-        compile_and_run(tmpdir, ['--model=crc-5', '--reflect-in=0', '--algorithm', 'table-driven', '--table-idx-width=8'], [], 'special', 0x01)
-        compile_and_run(tmpdir, ['--model=crc-5', '--reflect-in=0', '--algorithm', 'table-driven', '--table-idx-width=4'], [], 'special', 0x01)
-        compile_and_run(tmpdir, ['--model=crc-5', '--reflect-in=0', '--algorithm', 'table-driven', '--table-idx-width=2'], [], 'special', 0x01)
+        crc_5_args = ['--model=crc-5', '--reflect-in=0', '--algorithm', 'table-driven']
+        compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=8'], [], 'special', 0x01)
+        compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=4'], [], 'special', 0x01)
+        compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=2'], [], 'special', 0x01)
+
 
 def compile_and_run_variable_width(algo, cstd):
     check_str = "123456789"
@@ -150,18 +158,21 @@ def compile_and_run_variable_width(algo, cstd):
                     '--reflect-out',    '{:d}'.format(mw['reflect_out']),
                     ]
             reference = Crc(width=mw['width'], poly=mw['poly'],
-                        reflect_in=mw['reflect_in'], xor_in=mw['xor_in'],
-                        reflect_out=mw['reflect_out'], xor_out=mw['xor_out'])
+                            reflect_in=mw['reflect_in'], xor_in=mw['xor_in'],
+                            reflect_out=mw['reflect_out'], xor_out=mw['xor_out'])
             check = reference.bit_by_bit_fast(check_str)
             compile_and_run(tmpdir, ['--algorithm', algo, '--std', cstd] + args, [], 'var_width', check)
+
 
 def run_and_check_res(cmd, expected_crc):
     res = run_cmd(cmd).stdout.decode('utf-8').rstrip()
     assert res[:2] == '0x'
     assert int(res, 16) == expected_crc
 
+
 def compile_src(out_file, src_file, cstd='c99'):
     run_cmd(['cc', '-W', '-Wall', '-pedantic', '-Werror', f'-std={cstd}', '-o', out_file, src_file])
+
 
 def args_from_model(m):
     args = []

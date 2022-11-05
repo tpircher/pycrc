@@ -5,7 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
-## [v0.10.0] - unreleased
+## [Unreleased]
+
+### Added
+
+- Add support for GitHub CI
+
+### Fixed
+
+- Make flake8 happy
+
+## [v0.10.0] - 2022-11-01
 
 ### Added
 

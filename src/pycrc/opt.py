@@ -57,11 +57,10 @@ class Options(object):
     action_generate_c_main = 0x06
     action_generate_table = 0x07
 
-
-    def __init__(self, progname='pycrc', version=None, url=None):
+    def __init__(self, progname='pycrc', version='unknown', url='unknown'):
         self.program_name = progname
         self.version = version
-        self.version_str = "{0:s} v{1:s}".format(progname, version)
+        self.version_str = f"{progname} v{version}"
         self.web_address = url
 
         self.width = None
@@ -88,8 +87,7 @@ class Options(object):
         self.c_std = None
         self.undefined_crc_parameters = False
 
-
-    def parse(self, argv=None):
+    def parse(self, argv=None):     # noqa: C901
         """
         Parses and validates the options given as arguments
         """
@@ -153,7 +151,7 @@ of the following parameters:
         parser.add_option(
                 "--model",
                 action="callback", callback=_model_cb, type="string", dest="model", default=None,
-                help="choose a parameter set from {{{0:s}}}".format(model_list),
+                help=f"choose a parameter set from {{{model_list}}}",
                 metavar="MODEL")
         parser.add_option(
                 "--width",
@@ -221,98 +219,98 @@ of the following parameters:
                 help="write the generated code to file instead to stdout",
                 metavar="FILE")
 
-        (options, args) = parser.parse_args(argv)
+        options, args = parser.parse_args(argv)
 
-        if options.c_std != None:
+        if options.c_std is not None:
             std = options.c_std.upper()
             if std == "ANSI" or std == "C89":
                 self.c_std = "C89"
             elif std == "C99":
                 self.c_std = std
             else:
-                self.__error("unknown C standard {0:s}".format(options.c_std))
+                self.__error(f"unknown C standard {options.c_std}")
 
         undefined_params = []
-        if options.width != None:
+        if options.width is not None:
             self.width = options.width
         else:
             undefined_params.append("--width")
-        if options.poly != None:
+        if options.poly is not None:
             self.poly = options.poly
         else:
             undefined_params.append("--poly")
-        if options.reflect_in != None:
+        if options.reflect_in is not None:
             self.reflect_in = options.reflect_in
         else:
             undefined_params.append("--reflect-in")
-        if options.xor_in != None:
+        if options.xor_in is not None:
             self.xor_in = options.xor_in
         else:
             undefined_params.append("--xor-in")
-        if options.reflect_out != None:
+        if options.reflect_out is not None:
             self.reflect_out = options.reflect_out
         else:
             undefined_params.append("--reflect-out")
-        if options.xor_out != None:
+        if options.xor_out is not None:
             self.xor_out = options.xor_out
         else:
             undefined_params.append("--xor-out")
 
-        if options.table_idx_width != None:
+        if options.table_idx_width is not None:
             if options.table_idx_width in set((1, 2, 4, 8)):
                 self.tbl_idx_width = options.table_idx_width
                 self.tbl_width = 1 << options.table_idx_width
             else:
-                self.__error("unsupported table-idx-width {0:d}".format(options.table_idx_width))
+                self.__error(f"unsupported table-idx-width {options.table_idx_width}")
 
-        if self.poly != None and self.poly % 2 == 0 and not options.force_poly:
+        if self.poly is not None and self.poly % 2 == 0 and not options.force_poly:
             self.__error("even polinomials are not allowed by default. Use --force-poly to override this.")
 
-        if self.width != None:
+        if self.width is not None:
             if self.width <= 0:
                 self.__error("Width must be strictly positive")
             self.msb_mask = 0x1 << (self.width - 1)
             self.mask = ((self.msb_mask - 1) << 1) | 1
-            if self.poly != None and self.poly >> (self.width + 1) != 0 and not options.force_poly:
+            if self.poly is not None and self.poly >> (self.width + 1) != 0 and not options.force_poly:
                 self.__error("the polynomial is wider than the supplied Width. Use --force-poly to override this.")
-            if self.poly != None:
+            if self.poly is not None:
                 self.poly = self.poly & self.mask
-            if self.xor_in != None:
+            if self.xor_in is not None:
                 self.xor_in = self.xor_in & self.mask
-            if self.xor_out != None:
+            if self.xor_out is not None:
                 self.xor_out = self.xor_out & self.mask
         else:
             self.msb_mask = None
             self.mask = None
 
-        if self.width == None or \
-                self.poly == None or \
-                self.reflect_in == None or \
-                self.xor_in == None or \
-                self.reflect_out == None or \
-                self.xor_out == None:
+        if self.width is None or \
+                self.poly is None or \
+                self.reflect_in is None or \
+                self.xor_in is None or \
+                self.reflect_out is None or \
+                self.xor_out is None:
             self.undefined_crc_parameters = True
         else:
             self.undefined_crc_parameters = False
 
-        if options.slice_by != None:
+        if options.slice_by is not None:
             if options.slice_by in set((4, 8, 16)):
                 self.slice_by = options.slice_by
             else:
-                self.__error("unsupported slice-by {0:d}".format(options.slice_by))
+                self.__error(f"unsupported slice-by {options.slice_by}")
             if self.undefined_crc_parameters:
                 self.__error("slice-by is only implemented for fully defined models")
             if self.tbl_idx_width != 8:
                 self.__error("slice-by is only implemented for table-idx-width=8")
             # FIXME tp: Fix corner cases and disable the following tests
             if self.width < 8:
-                self.__warning("disabling slice-by for width {0}".format(self.width))
+                self.__warning(f"disabling slice-by for width {self.width}")
                 self.slice_by = 1
             if self.width < 16:
-                self.__warning("disabling slice-by for width {0}".format(self.width))
+                self.__warning(f"disabling slice-by for width {self.width}")
                 self.slice_by = 1
             if self.width > 32:
-                self.__warning("disabling slice-by for width {0}".format(self.width))
+                self.__warning(f"disabling slice-by for width {self.width}")
                 self.slice_by = 1
             if not self.reflect_in:
                 self.__warning("disabling slice-by for non-reflected algorithm")
@@ -325,7 +323,7 @@ of the following parameters:
             if self.c_std == "C89":
                 self.__error("--slice-by not supported for C89")
 
-        if options.algorithm != None:
+        if options.algorithm is not None:
             alg = options.algorithm.lower()
             if alg in set(["bit-by-bit", "bbb", "all"]):
                 self.algorithm |= self.algo_bit_by_bit
@@ -334,30 +332,30 @@ of the following parameters:
             if alg in set(["table-driven", "tbl", "all"]):
                 self.algorithm |= self.algo_table_driven
             if self.algorithm == 0:
-                self.__error("unknown algorithm {0:s}".format(options.algorithm))
+                self.__error(f"unknown algorithm {options.algorithm}")
 
-        if options.symbol_prefix != None:
+        if options.symbol_prefix is not None:
             self.symbol_prefix = options.symbol_prefix
-        if options.include_files != None:
+        if options.include_files is not None:
             self.include_files = options.include_files
-        if options.crc_type != None:
+        if options.crc_type is not None:
             self.crc_type = options.crc_type
-        if options.output_file != None:
+        if options.output_file is not None:
             self.output_file = options.output_file
         op_count = 0
-        if options.check_string != None:
+        if options.check_string is not None:
             self.action = self.action_check_str
             self.check_string = options.check_string
             op_count += 1
-        if options.check_hexstring != None:
+        if options.check_hexstring is not None:
             self.action = self.action_check_hex_str
             self.check_string = options.check_hexstring
             op_count += 1
-        if options.check_file != None:
+        if options.check_file is not None:
             self.action = self.action_check_file
             self.check_file = options.check_file
             op_count += 1
-        if options.generate != None:
+        if options.generate is not None:
             arg = options.generate.lower()
             if arg == 'h':
                 self.action = self.action_generate_h
@@ -368,13 +366,13 @@ of the following parameters:
             elif arg == 'table':
                 self.action = self.action_generate_table
             else:
-                self.__error("don't know how to generate {0:s}".format(options.generate))
+                self.__error(f"don't know how to generate {options.generate}")
             op_count += 1
 
             if self.action == self.action_generate_table:
                 if self.algorithm & self.algo_table_driven == 0:
                     self.__error("the --generate table option is incompatible "
-                        "with the --algorithm option")
+                                 "with the --algorithm option")
                 self.algorithm = self.algo_table_driven
             elif self.algorithm not in set(
                     [self.algo_bit_by_bit, self.algo_bit_by_bit_fast, self.algo_table_driven]):
@@ -382,7 +380,7 @@ of the following parameters:
         else:
             if self.tbl_idx_width != 8:
                 self.__warning("reverting to Table Index Width = 8 "
-                    "for internal CRC calculation")
+                               "for internal CRC calculation")
                 self.tbl_idx_width = 8
                 self.tbl_width = 1 << options.table_idx_width
         if op_count == 0:
@@ -396,27 +394,21 @@ of the following parameters:
         def_params_acts = (self.action_check_str, self.action_check_hex_str,
                            self.action_check_file, self.action_generate_table)
         if self.undefined_crc_parameters and self.action in set(def_params_acts):
-            self.__error("undefined parameters: Add {0:s} or use --model"
-                .format(", ".join(undefined_params)))
+            undefined_params_str = ", ".join(undefined_params)
+            self.__error(f"undefined parameters: Add {undefined_params_str} or use --model")
         self.verbose = options.verbose
-
-
 
     def __warning(self, message):
         """
         Print a warning message to stderr.
         """
-        sys.stderr.write(
-            "{0:s}: warning: {1:s}\n".format(self.program_name, message))
-
-
+        sys.stderr.write(f"{self.program_name}: warning: {message}\n")
 
     def __error(self, message):
         """
         Print a error message to stderr and terminate the program.
         """
-        sys.stderr.write(
-            "{0:s}: error: {1:s}\n".format(self.program_name, message))
+        self.__warning(message)
         sys.exit(1)
 
 
@@ -428,7 +420,7 @@ def _model_cb(option, opt_str, value, parser):
     model_name = value.lower()
     models = CrcModels()
     model = models.get_params(model_name)
-    if model != None:
+    if model is not None:
         setattr(parser.values, 'width', model['width'])
         setattr(parser.values, 'poly', model['poly'])
         setattr(parser.values, 'reflect_in', model['reflect_in'])
@@ -438,9 +430,7 @@ def _model_cb(option, opt_str, value, parser):
     else:
         models = CrcModels()
         model_list = ", ".join(models.names())
-        raise OptionValueError(
-            "unsupported model {0:s}. Supported models are: {1:s}."
-            .format(value, model_list))
+        raise OptionValueError(f"unsupported model {value}. Supported models are: {model_list}.")
 
 
 def _check_hex(dummy_option, opt, value):
@@ -454,8 +444,7 @@ def _check_hex(dummy_option, opt, value):
         else:
             return int(value)
     except ValueError:
-        raise OptionValueError(
-            "option {0:s}: invalid integer or hexadecimal value: {1:s}.".format(opt, value))
+        raise OptionValueError(f"option {opt}: invalid integer or hexadecimal value: {value}.")
 
 
 def _check_bool(dummy_option, opt, value):
@@ -470,7 +459,7 @@ def _check_bool(dummy_option, opt, value):
     elif value.lower() == "true":
         return True
     else:
-        raise OptionValueError("option {0:s}: invalid boolean value: {1:s}.".format(opt, value))
+        raise OptionValueError(f"option {opt}: invalid boolean value: {value}.")
 
 
 class MyOption(Option):
@@ -481,4 +470,3 @@ class MyOption(Option):
     TYPE_CHECKER = copy(Option.TYPE_CHECKER)
     TYPE_CHECKER["hex"] = _check_hex
     TYPE_CHECKER["bool"] = _check_bool
-

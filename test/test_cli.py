@@ -4,7 +4,6 @@ import logging
 import tempfile
 import subprocess
 from src.pycrc.models import CrcModels
-from src.pycrc.algorithms import Crc
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,19 +23,23 @@ class TestCli:
                 check_crc(args + ["--check-hexstring", ''.join([f"{i:02x}" for i in check_bytes])], expected_crc)
                 check_crc(args + ["--check-file", f.name], expected_crc)
 
+
 def run_cmd(cmd):
     LOGGER.info(' '.join(cmd))
     ret = subprocess.run(cmd, check=True, capture_output=True)
     return ret
 
+
 def run_pycrc(args):
     ret = run_cmd(['python3', 'src/pycrc.py'] + args)
     return ret.stdout.decode('utf-8').rstrip()
+
 
 def check_crc(args, expected_crc):
     res = run_pycrc(args)
     assert res[:2] == "0x"
     assert int(res, 16) == expected_crc
+
 
 def args_from_model(m):
     args = []
@@ -53,4 +56,3 @@ def args_from_model(m):
     if 'reflect_out' in m:
         args += ["--reflect-out", f"{m['reflect_out']}"]
     return args
-

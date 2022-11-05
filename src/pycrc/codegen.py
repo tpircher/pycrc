@@ -42,7 +42,7 @@ class CodeGen(object):
     """
     The symbol table class.
     """
-    def __init__(self, opt, indent, content = []):
+    def __init__(self, opt, indent, content=[]):
         """
         The class constructor.
         """
@@ -51,7 +51,7 @@ class CodeGen(object):
         self.indent = indent
         self.content = content
 
-    def gen(self, indent = ''):
+    def gen(self, indent=''):
         """
         Return an array of strings.
         """
@@ -71,7 +71,7 @@ class CodeGen(object):
         """
         Stringify the object.
         """
-        return '\n'.join([l.rstrip() for l in self.gen()])
+        return '\n'.join([i.rstrip() for i in self.gen()])
 
 
 class Conditional(CodeGen):
@@ -122,24 +122,23 @@ class ParamBlock(CodeGen):
     """
     Print the parameters of the model.
     """
-    def __init__(self, opt, indent, algorithm = False):
+    def __init__(self, opt, indent, algorithm=False):
         """
         The class constructor.
         """
         super(ParamBlock, self).__init__(opt, indent)
         self.content = [
-                '- {0:13s} = {1}'.format('Width', self.sym['crc_width']),
-                '- {0:13s} = {1}'.format('Poly', self.sym['crc_poly']),
-                '- {0:13s} = {1}'.format('XorIn', self.sym['crc_xor_in']),
-                '- {0:13s} = {1}'.format('ReflectIn', self.sym['crc_reflect_in']),
-                '- {0:13s} = {1}'.format('XorOut', self.sym['crc_xor_out']),
-                '- {0:13s} = {1}'.format('ReflectOut', self.sym['crc_reflect_out']),
+                '- {0:13s} = {1}'.format('Width', self.sym.crc_width),
+                '- {0:13s} = {1}'.format('Poly', self.sym.crc_poly),
+                '- {0:13s} = {1}'.format('XorIn', self.sym.crc_xor_in),
+                '- {0:13s} = {1}'.format('ReflectIn', self.sym.crc_reflect_in),
+                '- {0:13s} = {1}'.format('XorOut', self.sym.crc_xor_out),
+                '- {0:13s} = {1}'.format('ReflectOut', self.sym.crc_reflect_out),
                 Conditional(opt, '', algorithm,
-                    ['- {0:13s} = {1}'.format('Algorithm', self.sym['crc_algorithm'])]),
+                            ['- {0:13s} = {1}'.format('Algorithm', self.sym.crc_algorithm)]),
                 Conditional(opt, '', opt.slice_by > 1,
-                    ['- {0:13s} = {1}'.format('SliceBy', opt.slice_by)]),
+                            ['- {0:13s} = {1}'.format('SliceBy', opt.slice_by)]),
                 ]
-
 
 
 class File(CodeGen):
@@ -160,7 +159,7 @@ class File(CodeGen):
         if opt.action == opt.action_generate_c_main:
             self.content = self._code_file() + self._c_file() + self._main_file()
         if opt.action == opt.action_generate_table:
-            self.content = ['{crc_table_init}'.format(**self.sym)]
+            self.content = [f'{self.sym.crc_table_init}']
 
     def _code_file(self):
         """
@@ -171,28 +170,27 @@ class File(CodeGen):
                     '\\file',
                     'Functions and types for CRC checks.',
                     '',
-                    'Generated on {datetime}'.format(**self.sym),
-                    'by {program_version}, {program_url}'.format(**self.sym),
+                    f'Generated on {self.sym.datetime}',
+                    f'by {self.sym.program_version}, {self.sym.program_url}',
                     'using the configuration:',
-                    ParamBlock(self.opt, ' ', algorithm = True),
+                    ParamBlock(self.opt, ' ', algorithm=True),
                     Conditional(self.opt, '', self.opt.action == self.opt.action_generate_h, [
                         '',
-                        'This file defines the functions {crc_init_function}(), ' \
-                                '{crc_update_function}() and {crc_finalize_function}().'.format(**self.sym),
+                        f'This file defines the functions {self.sym.crc_init_function}(), {self.sym.crc_update_function}() and {self.sym.crc_finalize_function}().',
                         '',
-                        'The {crc_init_function}() function returns the initial \c crc value and must be called'.format(**self.sym),
-                        'before the first call to {crc_update_function}().'.format(**self.sym),
-                        'Similarly, the {crc_finalize_function}() function must be called after the last call'.format(**self.sym),
-                        'to {crc_update_function}(), before the \c crc is being used.'.format(**self.sym),
+                        f'The {self.sym.crc_init_function}() function returns the initial \\c crc value and must be called',
+                        f'before the first call to {self.sym.crc_update_function}().',
+                        f'Similarly, the {self.sym.crc_finalize_function}() function must be called after the last call',
+                        f'to {self.sym.crc_update_function}(), before the \\c crc is being used.',
                         'is being used.',
                         '',
-                        'The {crc_update_function}() function can be called any number of times (including zero'.format(**self.sym),
-                        'times) in between the {crc_init_function}() and {crc_finalize_function}() calls.'.format(**self.sym),
+                        f'The {self.sym.crc_update_function}() function can be called any number of times (including zero',
+                        f'times) in between the {self.sym.crc_init_function}() and {self.sym.crc_finalize_function}() calls.',
                         '',
                         'This pseudo-code shows an example usage of the API:',
-                        '\code{.c}',
+                        '\\code{.c}',
                         Conditional(self.opt, '', self.opt.undefined_crc_parameters, [
-                            '{cfg_t} cfg = '.format(**self.sym) + '{',
+                            f'{self.sym.cfg_t} cfg = ' + '{',
                             Conditional(self.opt, 4*' ', self.opt.width is None, [
                                 '0,      // width',
                                 ]),
@@ -219,21 +217,21 @@ class File(CodeGen):
                                 ]),
                             '};',
                             ]),
-                        '{crc_t} crc;'.format(**self.sym),
+                        f'{self.sym.crc_t} crc;',
                         'unsigned char data[MAX_DATA_LEN];',
                         'size_t data_len;',
                         '',
                         Conditional(self.opt, '', _use_crc_table_gen(self.opt), [
-                            '{crc_table_gen_function}(&cfg);'.format(**self.sym),
+                            f'{self.sym.crc_table_gen_function}(&cfg);',
                             ]),
-                        'crc = {0}({1});'.format(self.sym['crc_init_function'], '' if _use_constant_crc_init(self.sym) else '&cfg'),
+                        'crc = {0}({1});'.format(self.sym.crc_init_function, '' if _use_constant_crc_init(self.sym) else '&cfg'),
                         'while ((data_len = read_data(data, MAX_DATA_LEN)) > 0) {',
                         CodeGen(self.opt, 4*' ', [
-                            'crc = {0}({1}crc, data, data_len);'.format(self.sym['crc_update_function'], '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
+                            'crc = {0}({1}crc, data, data_len);'.format(self.sym.crc_update_function, '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
                             ]),
                         '}',
-                        'crc = {0}({1}crc);'.format(self.sym['crc_finalize_function'], '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
-                        '\endcode',
+                        'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
+                        '\\endcode',
                         ]),
                     ]),
                 ]
@@ -244,15 +242,15 @@ class File(CodeGen):
         Add header content.
         """
         out = [
-                '#ifndef {header_protection}'.format(**self.sym),
-                '#define {header_protection}'.format(**self.sym),
+                f'#ifndef {self.sym.header_protection}',
+                f'#define {self.sym.header_protection}',
                 '',
                 CodeGen(self.opt, '', _includes(self.opt)),
                 '#include <stdlib.h>',
                 Conditional(self.opt, '', self.opt.c_std != 'C89',
-                    ['#include <stdint.h>']),
+                            ['#include <stdint.h>']),
                 Conditional(self.opt, '', _use_cfg(self.opt) and self.opt.c_std != 'C89',
-                    ['#include <stdbool.h>']),
+                            ['#include <stdbool.h>']),
                 '',
                 '#ifdef __cplusplus',
                 'extern "C" {',
@@ -269,42 +267,45 @@ class File(CodeGen):
                 Comment(self.opt, self.indent, [
                     'The type of the CRC values.',
                     '',
-                    'This type must be big enough to contain at least {cfg_width} bits.'.format(**self.sym),
+                    f'This type must be big enough to contain at least {self.sym.cfg_width} bits.',
                     ]),
-                'typedef {underlying_crc_t} {crc_t};'.format(**self.sym),
+                f'typedef {self.sym.underlying_crc_t} {self.sym.crc_t};',
                 Conditional(self.opt, '', _use_cfg(self.opt), [
                     '', '',
                     Comment(self.opt, self.indent, ['The configuration type of the CRC algorithm.']),
                     'typedef struct {',
                     Conditional(self.opt, 4*' ', self.opt.width is None,
-                        ['{0:24s}    {1}'.format('unsigned int width;',
-                            '/*!< The width of the polynomial */')]),
+                                ['{0:24s}    {1}'.format('unsigned int width;',
+                                                         '/*!< The width of the polynomial */')]),
                     Conditional(self.opt, 4*' ', self.opt.poly is None,
-                        ['{0:24s}    {1}'.format(self.sym['crc_t'] + ' poly;',
-                            '/*!< The CRC polynomial */')]),
+                                ['{0:24s}    {1}'.format(self.sym.crc_t + ' poly;',
+                                                         '/*!< The CRC polynomial */')]),
                     Conditional(self.opt, 4*' ', self.opt.reflect_in is None,
-                        ['{0:24s}    {1}'.format(self.sym['c_bool'] + ' reflect_in;',
-                            '/*!< Whether the input shall be reflected or not */')]),
+                                ['{0:24s}    {1}'.format(self.sym.c_bool + ' reflect_in;',
+                                                         '/*!< Whether the input shall be reflected or not */')]),
                     Conditional(self.opt, 4*' ', self.opt.xor_in is None,
-                        ['{0:24s}    {1}'.format(self.sym['crc_t'] + ' xor_in;',
-                            '/*!< The initial value of the register */')]),
+                                ['{0:24s}    {1}'.format(self.sym.crc_t + ' xor_in;',
+                                                         '/*!< The initial value of the register */')]),
                     Conditional(self.opt, 4*' ', self.opt.reflect_out is None,
-                        ['{0:24s}    {1}'.format(self.sym['c_bool'] + ' reflect_out;',
-                            '/*!< Whether the output shall be reflected or not */')]),
+                                ['{0:24s}    {1}'.format(self.sym.c_bool + ' reflect_out;',
+                                                         '/*!< Whether the output shall be reflected or not */')]),
                     Conditional(self.opt, 4*' ', self.opt.xor_out is None,
-                        ['{0:24s}    {1}'.format(self.sym['crc_t'] + ' xor_out;',
-                            '/*!< The value which shall be XOR-ed to the final CRC value */')]),
+                                ['{0:24s}    {1}'.format(self.sym.crc_t + ' xor_out;',
+                                                         '/*!< The value which shall be XOR-ed to the final CRC value */')]),
                     Conditional(self.opt, 4*' ', self.opt.width is None, [
                         '',
                         '/* internal parameters */',
-                        '{0:24s}    {1}'.format(self.sym['crc_t'] + ' msb_mask;', '/*!< a bitmask with the Most Significant Bit set to 1'),
+                        '{0:24s}    {1}'.format(self.sym.crc_t + ' msb_mask;',
+                                                '/*!< a bitmask with the Most Significant Bit set to 1'),
                         33*' ' + 'initialise as (crc_t)1u << (width - 1) */',
-                        '{0:24s}    {1}'.format(self.sym['crc_t'] + ' crc_mask;', '/*!< a bitmask with all width bits set to 1'),
+                        '{0:24s}    {1}'.format(self.sym.crc_t + ' crc_mask;',
+                                                '/*!< a bitmask with all width bits set to 1'),
                         33*' ' + 'initialise as (cfg->msb_mask - 1) | cfg->msb_mask */',
-                        '{0:24s}    {1}'.format('unsigned int crc_shift;', '/*!< a shift count that is used when width < 8'),
+                        '{0:24s}    {1}'.format('unsigned int crc_shift;',
+                                                '/*!< a shift count that is used when width < 8'),
                         33*' ' + 'initialise as cfg->width < 8 ? 8 - cfg->width : 0 */',
                         ]),
-                    '}} {cfg_t};'.format(**self.sym),
+                    f'}} {self.sym.cfg_t};',
                     ]),
                 Conditional(self.opt, '', _use_reflect_func(self.opt) and not _use_static_reflect_func(self.opt), [
                     '', '',
@@ -315,33 +316,33 @@ class File(CodeGen):
                         '\\param[in] data_len The width of \\a data expressed in number of bits.',
                         '\\return             The reflected data.'
                         ]),
-                    '{crc_t} {crc_reflect_function}({crc_t} data, size_t data_len);'.format(**self.sym),
+                    f'{self.sym.crc_t} {self.sym.crc_reflect_function}({self.sym.crc_t} data, size_t data_len);',
                     ]),
                 Conditional(self.opt, '', _use_crc_table_gen(self.opt), [
                     '', '',
                     Comment(self.opt, '', [
                         'Populate the private static crc table.',
                         '',
-                        '\\param[in] cfg  A pointer to an initialised {cfg_t} structure.'.format(**self.sym),
+                        f'\\param[in] cfg  A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
-                    'void {crc_table_gen_function}(const {cfg_t} *cfg);'.format(**self.sym),
+                    f'void {self.sym.crc_table_gen_function}(const {self.sym.cfg_t} *cfg);',
                     ]),
                 '', '',
                 Comment(self.opt, '', [
                     'Calculate the initial crc value.',
                     '',
                     Conditional(self.opt, '', _use_cfg(self.opt), [
-                        '\\param[in] cfg  A pointer to an initialised {cfg_t} structure.'.format(**self.sym),
+                        f'\\param[in] cfg  A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
                     '\\return     The initial crc value.',
                     ]),
                 Conditional2(self.opt, '', _use_constant_crc_init(self.sym), [
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
-                        '#define {crc_init_function}()      ({crc_init_value})'.format(**self.sym),
+                        f'#define {self.sym.crc_init_function}()      ({self.sym.crc_init_value})',
                         ], [
                         'static inline {0}'.format(_crc_init_function_def(self.opt, self.sym)),
                         '{',
-                        '    return {crc_init_value};'.format(**self.sym),
+                        f'    return {self.sym.crc_init_value};',
                         '}',
                         ]),
                     ], [
@@ -353,7 +354,7 @@ class File(CodeGen):
                     '',
                     '\\param[in] crc      The current crc value.',
                     Conditional(self.opt, '', not _use_cfg_in_crc_update(self.opt), [
-                        '\\param[in] cfg      A pointer to an initialised {cfg_t} structure.'.format(**self.sym),
+                        f'\\param[in] cfg      A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
                     '\\param[in] data     Pointer to a buffer of \\a data_len bytes.',
                     '\\param[in] data_len Number of bytes in the \\a data buffer.',
@@ -365,14 +366,14 @@ class File(CodeGen):
                     'Calculate the final crc value.',
                     '',
                     Conditional(self.opt, '', not _use_cfg_in_finalize(self.opt), [
-                        '\\param[in] cfg  A pointer to an initialised {cfg_t} structure.'.format(**self.sym),
+                        f'\\param[in] cfg  A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
                     '\\param[in] crc  The current crc value.',
                     '\\return     The final crc value.',
                     ]),
                 Conditional2(self.opt, '', _use_inline_crc_finalize(self.opt), [
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
-                        '#define {0}(crc)      ({1})'.format(self.sym['crc_finalize_function'], _crc_final_value(self.opt, self.sym)),
+                        '#define {0}(crc)      ({1})'.format(self.sym.crc_finalize_function, _crc_final_value(self.opt, self.sym)),
                         ], [
                         'static inline {0}'.format(_crc_finalize_function_def(self.opt, self.sym)),
                         '{',
@@ -387,7 +388,7 @@ class File(CodeGen):
                 '}           /* closing brace for extern "C" */',
                 '#endif',
                 '',
-                '#endif      /* {header_protection} */'.format(**self.sym),
+                f'#endif      /* {self.sym.header_protection} */',
                 '',
                 ]
         return out
@@ -398,22 +399,22 @@ class File(CodeGen):
         """
         out = [
                 CodeGen(self.opt, '', _includes(self.opt)),
-                '#include "{header_filename}"     /* include the header file generated with pycrc */'.format(**self.sym),
+                f'#include "{self.sym.header_filename}"     /* include the header file generated with pycrc */',
                 '#include <stdlib.h>',
                 Conditional(self.opt, '', self.opt.c_std != 'C89', [
                     '#include <stdint.h>',
-                    Conditional(self.opt, '', self.opt.undefined_crc_parameters or \
-                            self.opt.algorithm == self.opt.algo_bit_by_bit or \
-                            self.opt.algorithm == self.opt.algo_bit_by_bit_fast, [
-                        '#include <stdbool.h>',
-                        ]),
-                    ]),
+                    Conditional(self.opt, '', self.opt.undefined_crc_parameters or
+                                self.opt.algorithm == self.opt.algo_bit_by_bit or
+                                self.opt.algorithm == self.opt.algo_bit_by_bit_fast, [
+                                    '#include <stdbool.h>',
+                                    ]),
+                                ]),
                 Conditional(self.opt, '', self.opt.slice_by > 1, [
                     '#include <endian.h>',
                     ]),
                 Conditional(self.opt, '', _use_reflect_func(self.opt) and _use_static_reflect_func(self.opt), [
                     '',
-                    'static {crc_t} {crc_reflect_function}({crc_t} data, size_t data_len);'.format(**self.sym),
+                    f'static {self.sym.crc_t} {self.sym.crc_reflect_function}({self.sym.crc_t} data, size_t data_len);',
                     ]),
                 '',
                 CodeGen(self.opt, '', _crc_table(self.opt, self.sym)),
@@ -446,12 +447,12 @@ class File(CodeGen):
                 '#include <string.h>',
                 '',
                 'static char str[256] = "123456789";',
-                'static {c_bool} verbose = {c_false};'.format(**self.sym),
+                f'static {self.sym.c_bool} verbose = {self.sym.c_false};',
                 self._getopt_template(),
                 '',
                 '',
                 Conditional2(self.opt, '', self.opt.undefined_crc_parameters, [
-                    'static void print_params(const {cfg_t} *cfg)'.format(**self.sym),
+                    f'static void print_params(const {self.sym.cfg_t} *cfg)',
                     ], [
                     'static void print_params(void)',
                     ]),
@@ -460,25 +461,29 @@ class File(CodeGen):
                     'char format[32];',
                     '',
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
-                        'sprintf(format, "%%-16s = 0x%%0%dlx\\n", (unsigned int)({cfg_width} + 3) / 4);'.format(**self.sym),
-                        'printf("%-16s = %d\\n", "width", (unsigned int){cfg_width});'.format(**self.sym),
-                        'printf(format, "poly", (unsigned long int){cfg_poly});'.format(**self.sym),
-                        'printf("%-16s = %s\\n", "reflect_in", {0});'.format(self.sym['cfg_reflect_in'] + ' ? "true": "false"' if self.opt.reflect_in is None else ('"true"' if self.opt.reflect_in else '"false"')),
-                        'printf(format, "xor_in", (unsigned long int){cfg_xor_in});'.format(**self.sym),
-                        'printf("%-16s = %s\\n", "reflect_out", {0});'.format(self.sym['cfg_reflect_out'] + ' ? "true": "false"' if self.opt.reflect_out is None else ('"true"' if self.opt.reflect_out else '"false"')),
-                        'printf(format, "xor_out", (unsigned long int){cfg_xor_out});'.format(**self.sym),
-                        'printf(format, "crc_mask", (unsigned long int){cfg_mask});'.format(**self.sym),
-                        'printf(format, "msb_mask", (unsigned long int){cfg_msb_mask});'.format(**self.sym),
+                        f'sprintf(format, "%%-16s = 0x%%0%dlx\\n", (unsigned int)({self.sym.cfg_width} + 3) / 4);',
+                        f'printf("%-16s = %d\\n", "width", (unsigned int){self.sym.cfg_width});',
+                        f'printf(format, "poly", (unsigned long int){self.sym.cfg_poly});',
+                        'printf("%-16s = %s\\n", "reflect_in", {0});'.format(self.sym.cfg_reflect_in + ' ? "true": "false"' if self.opt.reflect_in is None
+                                                                             else ('"true"' if self.opt.reflect_in else '"false"')),
+                        f'printf(format, "xor_in", (unsigned long int){self.sym.cfg_xor_in});',
+                        'printf("%-16s = %s\\n", "reflect_out", {0});'.format(self.sym.cfg_reflect_out + ' ? "true": "false"' if self.opt.reflect_out is None
+                                                                              else ('"true"' if self.opt.reflect_out else '"false"')),
+                        f'printf(format, "xor_out", (unsigned long int){self.sym.cfg_xor_out});',
+                        f'printf(format, "crc_mask", (unsigned long int){self.sym.cfg_mask});',
+                        f'printf(format, "msb_mask", (unsigned long int){self.sym.cfg_msb_mask});',
                         ], [
-                        'snprintf(format, sizeof(format), "%%-16s = 0x%%0%dllx\\n", (unsigned int)({cfg_width} + 3) / 4);'.format(**self.sym),
-                        'printf("%-16s = %d\\n", "width", (unsigned int){cfg_width});'.format(**self.sym),
-                        'printf(format, "poly", (unsigned long long int){cfg_poly});'.format(**self.sym),
-                        'printf("%-16s = %s\\n", "reflect_in", {0});'.format(self.sym['cfg_reflect_in'] + ' ? "true": "false"' if self.opt.reflect_in is None else ('"true"' if self.opt.reflect_in else '"false"')),
-                        'printf(format, "xor_in", (unsigned long long int){cfg_xor_in});'.format(**self.sym),
-                        'printf("%-16s = %s\\n", "reflect_out", {0});'.format(self.sym['cfg_reflect_out'] + ' ? "true": "false"' if self.opt.reflect_out is None else ('"true"' if self.opt.reflect_out else '"false"')),
-                        'printf(format, "xor_out", (unsigned long long int){cfg_xor_out});'.format(**self.sym),
-                        'printf(format, "crc_mask", (unsigned long long int){cfg_mask});'.format(**self.sym),
-                        'printf(format, "msb_mask", (unsigned long long int){cfg_msb_mask});'.format(**self.sym),
+                        f'snprintf(format, sizeof(format), "%%-16s = 0x%%0%dllx\\n", (unsigned int)({self.sym.cfg_width} + 3) / 4);',
+                        f'printf("%-16s = %d\\n", "width", (unsigned int){self.sym.cfg_width});',
+                        f'printf(format, "poly", (unsigned long long int){self.sym.cfg_poly});',
+                        'printf("%-16s = %s\\n", "reflect_in", {0});'.format(self.sym.cfg_reflect_in + ' ? "true": "false"' if self.opt.reflect_in is None
+                                                                             else ('"true"' if self.opt.reflect_in else '"false"')),
+                        f'printf(format, "xor_in", (unsigned long long int){self.sym.cfg_xor_in});',
+                        'printf("%-16s = %s\\n", "reflect_out", {0});'.format(self.sym.cfg_reflect_out + ' ? "true": "false"' if self.opt.reflect_out is None
+                                                                              else ('"true"' if self.opt.reflect_out else '"false"')),
+                        f'printf(format, "xor_out", (unsigned long long int){self.sym.cfg_xor_out});',
+                        f'printf(format, "crc_mask", (unsigned long long int){self.sym.cfg_mask});',
+                        f'printf(format, "msb_mask", (unsigned long long int){self.sym.cfg_msb_mask});',
                         ]),
                     ]),
                 '}',
@@ -495,7 +500,7 @@ class File(CodeGen):
                 '{',
                 CodeGen(self.opt, 4*' ', [
                     Conditional(self.opt, '', self.opt.undefined_crc_parameters, [
-                        '{cfg_t} cfg = '.format(**self.sym) + '{',
+                        f'{self.sym.cfg_t} cfg = ' + '{',
                         Conditional(self.opt, 4*' ', self.opt.width is None, [
                             '0,      /* width */',
                             ]),
@@ -522,7 +527,7 @@ class File(CodeGen):
                             ]),
                         '};',
                         ]),
-                    '{crc_t} crc;'.format(**self.sym),
+                    f'{self.sym.crc_t} crc;',
                     '',
                     Conditional2(self.opt, '', self.opt.undefined_crc_parameters, [
                         'get_config(argc, argv, &cfg);',
@@ -530,11 +535,11 @@ class File(CodeGen):
                         'get_config(argc, argv);',
                         ]),
                     Conditional(self.opt, '', _use_crc_table_gen(self.opt), [
-                        '{crc_table_gen_function}(&cfg);'.format(**self.sym),
+                        f'{self.sym.crc_table_gen_function}(&cfg);',
                         ]),
-                    'crc = {0}({1});'.format(self.sym['crc_init_function'], '' if _use_constant_crc_init(self.sym) else '&cfg'),
-                    'crc = {0}({1}crc, (void *)str, strlen(str));'.format(self.sym['crc_update_function'], '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
-                    'crc = {0}({1}crc);'.format(self.sym['crc_finalize_function'], '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
+                    'crc = {0}({1});'.format(self.sym.crc_init_function, '' if _use_constant_crc_init(self.sym) else '&cfg'),
+                    'crc = {0}({1}crc, (void *)str, strlen(str));'.format(self.sym.crc_update_function, '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
+                    'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
                     '',
                     'if (verbose) {',
                     CodeGen(self.opt, 4*' ', [
@@ -560,7 +565,7 @@ class File(CodeGen):
                 Conditional(self.opt, '', self.opt.reflect_in is None or self.opt.reflect_out is None, [
                     '',
                     '',
-                    'static {c_bool} atob(const char *str)'.format(**self.sym),
+                    f'static {self.sym.c_bool} atob(const char *str)',
                     '{',
                     CodeGen(self.opt, 4*' ', [
                         'if (!str) {',
@@ -570,15 +575,15 @@ class File(CodeGen):
                         '}',
                         'if (isdigit(str[0])) {',
                         CodeGen(self.opt, 4*' ', [
-                            'return ({c_bool})atoi(str);'.format(**self.sym),
+                            f'return ({self.sym.c_bool})atoi(str);',
                             ]),
                         '}',
                         'if (tolower(str[0]) == \'t\') {',
                         CodeGen(self.opt, 4*' ', [
-                            'return {c_true};'.format(**self.sym),
+                            f'return {self.sym.c_true};',
                             ]),
                         '}',
-                        'return {c_false};'.format(**self.sym),
+                        f'return {self.sym.c_false};',
                         ]),
                     '}',
                     ]),
@@ -637,162 +642,162 @@ class File(CodeGen):
                         ]),
                     '}',
                     ]),
-                    '',
-                    '',
+                '',
+                '',
                 Conditional2(self.opt, '', self.opt.undefined_crc_parameters, [
-                    'static int get_config(int argc, char *argv[], {cfg_t} *cfg)'.format(**self.sym),
+                    f'static int get_config(int argc, char *argv[], {self.sym.cfg_t} *cfg)',
                     ], [
                     'static int get_config(int argc, char *argv[])',
                     ]),
-                    '{',
+                '{',
+                CodeGen(self.opt, 4*' ', [
+                    'int c;',
+                    'int option_index;',
+                    'static struct option long_options[] = {',
                     CodeGen(self.opt, 4*' ', [
-                        'int c;',
-                        'int option_index;',
-                        'static struct option long_options[] = {',
-                        CodeGen(self.opt, 4*' ', [
-                            Conditional(self.opt, '', self.opt.width is None, [
-                                '{"width",           1, 0, \'w\'},',
-                                ]),
-                            Conditional(self.opt, '', self.opt.poly is None, [
-                                '{"poly",            1, 0, \'p\'},',
-                                ]),
-                            Conditional(self.opt, '', self.opt.reflect_in is None, [
-                                '{"reflect-in",      1, 0, \'n\'},',
-                                ]),
-                            Conditional(self.opt, '', self.opt.xor_in is None, [
-                                '{"xor-in",          1, 0, \'i\'},',
-                                ]),
-                            Conditional(self.opt, '', self.opt.reflect_out is None, [
-                                '{"reflect-out",     1, 0, \'u\'},',
-                                ]),
-                            Conditional(self.opt, '', self.opt.xor_out is None, [
-                                '{"xor-out",         1, 0, \'o\'},',
-                                ]),
-                            '{"verbose",         0, 0, \'v\'},',
-                            '{"check-string",    1, 0, \'s\'},',
-                            Conditional(self.opt, '', self.opt.width is None, [
-                                '{"table-idx-with",  1, 0, \'t\'},',
-                                ]),
-                            '{0, 0, 0, 0}',
-                        ]),
-                        '};',
-                        '',
-                        'while (1) {',
-                        CodeGen(self.opt, 4*' ', [
-                            'option_index = 0;',
-                            '',
-                            'c = getopt_long(argc, argv, "w:p:n:i:u:o:s:vt", long_options, &option_index);',
-                            'if (c == -1)',
-                            CodeGen(self.opt, 4*' ', [
-                                'break;',
-                                ]),
-                            '',
-                            'switch (c) {',
-                            CodeGen(self.opt, 4*' ', [
-                                'case 0:',
-                                CodeGen(self.opt, 4*' ', [
-                                    'printf("option %s", long_options[option_index].name);',
-                                    'if (optarg)',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'printf(" with arg %s", optarg);',
-                                        ]),
-                                    'printf("\\n");',
-                                    'break;',
-                                    ]),
-                                Conditional(self.opt, '', self.opt.width is None, [
-                                    'case \'w\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'cfg->width = atoi(optarg);',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                Conditional(self.opt, '', self.opt.poly is None, [
-                                    'case \'p\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'cfg->poly = xtoi(optarg);',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                Conditional(self.opt, '', self.opt.reflect_in is None, [
-                                    'case \'n\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'cfg->reflect_in = atob(optarg);',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                Conditional(self.opt, '', self.opt.xor_in is None, [
-                                    'case \'i\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'cfg->xor_in = xtoi(optarg);',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                Conditional(self.opt, '', self.opt.reflect_out is None, [
-                                    'case \'u\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        'cfg->reflect_out = atob(optarg);',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                Conditional(self.opt, '', self.opt.xor_out is None, [
-                                    'case \'o\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                            'cfg->xor_out = xtoi(optarg);',
-                                            'break;',
-                                            ]),
-                                    ]),
-                                'case \'s\':',
-                                CodeGen(self.opt, 4*' ', [
-                                    'memcpy(str, optarg, strlen(optarg) < sizeof(str) ? strlen(optarg) + 1 : sizeof(str));',
-                                    'str[sizeof(str) - 1] = \'\\0\';',
-                                    'break;',
-                                    ]),
-                                'case \'v\':',
-                                CodeGen(self.opt, 4*' ', [
-                                    'verbose = {c_true};'.format(**self.sym),
-                                    'break;',
-                                    ]),
-                                Conditional(self.opt, '', self.opt.width is None, [
-                                    'case \'t\':',
-                                    CodeGen(self.opt, 4*' ', [
-                                        '/* ignore --table_idx_width option */',
-                                        'break;',
-                                        ]),
-                                    ]),
-                                'case \'?\':',
-                                CodeGen(self.opt, 4*' ', [
-                                    'return -1;',
-                                    ]),
-                                'case \':\':',
-                                CodeGen(self.opt, 4*' ', [
-                                    'fprintf(stderr, "missing argument to option %c\\n", c);',
-                                    'return -1;',
-                                    ]),
-                                'default:',
-                                CodeGen(self.opt, 4*' ', [
-                                    'fprintf(stderr, "unhandled option %c\\n", c);',
-                                    'return -1;',
-                                    ]),
-                                ]),
-                            '}',
-                            ]),
-                        '}',
                         Conditional(self.opt, '', self.opt.width is None, [
-                            'cfg->msb_mask = (crc_t)1u << (cfg->width - 1);',
-                            'cfg->crc_mask = (cfg->msb_mask - 1) | cfg->msb_mask;',
-                            'cfg->crc_shift = cfg->width < 8 ? 8 - cfg->width : 0;',
+                            '{"width",           1, 0, \'w\'},',
                             ]),
-                        '',
                         Conditional(self.opt, '', self.opt.poly is None, [
-                            'cfg->poly &= {cfg_mask};'.format(**self.sym),
+                            '{"poly",            1, 0, \'p\'},',
+                            ]),
+                        Conditional(self.opt, '', self.opt.reflect_in is None, [
+                            '{"reflect-in",      1, 0, \'n\'},',
                             ]),
                         Conditional(self.opt, '', self.opt.xor_in is None, [
-                            'cfg->xor_in &= {cfg_mask};'.format(**self.sym),
+                            '{"xor-in",          1, 0, \'i\'},',
+                            ]),
+                        Conditional(self.opt, '', self.opt.reflect_out is None, [
+                            '{"reflect-out",     1, 0, \'u\'},',
                             ]),
                         Conditional(self.opt, '', self.opt.xor_out is None, [
-                            'cfg->xor_out &= {cfg_mask};'.format(**self.sym),
+                            '{"xor-out",         1, 0, \'o\'},',
                             ]),
-                        'return 0;',
+                        '{"verbose",         0, 0, \'v\'},',
+                        '{"check-string",    1, 0, \'s\'},',
+                        Conditional(self.opt, '', self.opt.width is None, [
+                            '{"table-idx-with",  1, 0, \'t\'},',
+                            ]),
+                        '{0, 0, 0, 0}',
+                        ]),
+                    '};',
+                    '',
+                    'while (1) {',
+                    CodeGen(self.opt, 4*' ', [
+                        'option_index = 0;',
+                        '',
+                        'c = getopt_long(argc, argv, "w:p:n:i:u:o:s:vt", long_options, &option_index);',
+                        'if (c == -1)',
+                        CodeGen(self.opt, 4*' ', [
+                            'break;',
+                            ]),
+                        '',
+                        'switch (c) {',
+                        CodeGen(self.opt, 4*' ', [
+                            'case 0:',
+                            CodeGen(self.opt, 4*' ', [
+                                'printf("option %s", long_options[option_index].name);',
+                                'if (optarg)',
+                                CodeGen(self.opt, 4*' ', [
+                                    'printf(" with arg %s", optarg);',
+                                    ]),
+                                'printf("\\n");',
+                                'break;',
+                                ]),
+                            Conditional(self.opt, '', self.opt.width is None, [
+                                'case \'w\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->width = atoi(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            Conditional(self.opt, '', self.opt.poly is None, [
+                                'case \'p\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->poly = xtoi(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            Conditional(self.opt, '', self.opt.reflect_in is None, [
+                                'case \'n\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->reflect_in = atob(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            Conditional(self.opt, '', self.opt.xor_in is None, [
+                                'case \'i\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->xor_in = xtoi(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            Conditional(self.opt, '', self.opt.reflect_out is None, [
+                                'case \'u\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->reflect_out = atob(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            Conditional(self.opt, '', self.opt.xor_out is None, [
+                                'case \'o\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    'cfg->xor_out = xtoi(optarg);',
+                                    'break;',
+                                    ]),
+                                ]),
+                            'case \'s\':',
+                            CodeGen(self.opt, 4*' ', [
+                                'memcpy(str, optarg, strlen(optarg) < sizeof(str) ? strlen(optarg) + 1 : sizeof(str));',
+                                'str[sizeof(str) - 1] = \'\\0\';',
+                                'break;',
+                                ]),
+                            'case \'v\':',
+                            CodeGen(self.opt, 4*' ', [
+                                f'verbose = {self.sym.c_true};',
+                                'break;',
+                                ]),
+                            Conditional(self.opt, '', self.opt.width is None, [
+                                'case \'t\':',
+                                CodeGen(self.opt, 4*' ', [
+                                    '/* ignore --table_idx_width option */',
+                                    'break;',
+                                    ]),
+                                ]),
+                            'case \'?\':',
+                            CodeGen(self.opt, 4*' ', [
+                                'return -1;',
+                                ]),
+                            'case \':\':',
+                            CodeGen(self.opt, 4*' ', [
+                                'fprintf(stderr, "missing argument to option %c\\n", c);',
+                                'return -1;',
+                                ]),
+                            'default:',
+                            CodeGen(self.opt, 4*' ', [
+                                'fprintf(stderr, "unhandled option %c\\n", c);',
+                                'return -1;',
+                                ]),
+                            ]),
+                        '}',
+                        ]),
+                    '}',
+                    Conditional(self.opt, '', self.opt.width is None, [
+                        'cfg->msb_mask = (crc_t)1u << (cfg->width - 1);',
+                        'cfg->crc_mask = (cfg->msb_mask - 1) | cfg->msb_mask;',
+                        'cfg->crc_shift = cfg->width < 8 ? 8 - cfg->width : 0;',
+                        ]),
+                    '',
+                    Conditional(self.opt, '', self.opt.poly is None, [
+                        f'cfg->poly &= {self.sym.cfg_mask};',
+                        ]),
+                    Conditional(self.opt, '', self.opt.xor_in is None, [
+                        f'cfg->xor_in &= {self.sym.cfg_mask};',
+                        ]),
+                    Conditional(self.opt, '', self.opt.xor_out is None, [
+                        f'cfg->xor_out &= {self.sym.cfg_mask};',
+                        ]),
+                    'return 0;',
                     ]),
                 '}',
                 ]
@@ -817,7 +822,7 @@ def _crc_algo_define(opt, sym):
     """
     Get the the identifier for header files.
     """
-    name = sym['crc_algorithm'].upper().replace('-', '_')
+    name = sym.crc_algorithm.upper().replace('-', '_')
     return 'CRC_ALGO_' + name
 
 
@@ -832,14 +837,14 @@ def _use_constant_crc_init(sym):
     """
     Return True if the inintial value is constant.
     """
-    return sym['crc_init_value'] is not None
+    return sym.crc_init_value is not None
 
 
 def _use_reflect_func(opt):
     """
     Return True if the reflect function is to be used.
     """
-    if opt.reflect_out == None or opt.reflect_in == None:
+    if opt.reflect_out is None or opt.reflect_in is None:
         return True
     if opt.algorithm == opt.algo_table_driven:
         if opt.reflect_in and opt.reflect_out:
@@ -885,9 +890,9 @@ def _crc_init_function_def(opt, sym):
     The definition for the init function.
     """
     if _use_constant_crc_init(sym):
-        return '{crc_t} {crc_init_function}(void)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_init_function}(void)'
     else:
-        return '{crc_t} {crc_init_function}(const {cfg_t} *cfg)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_init_function}(const {sym.cfg_t} *cfg)'
 
 
 def _use_cfg_in_crc_update(opt):
@@ -908,9 +913,9 @@ def _crc_update_function_def(opt, sym):
     The definition of the update function.
     """
     if _use_cfg_in_crc_update(opt):
-        return '{crc_t} {crc_update_function}({crc_t} crc, const void *data, size_t data_len)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_update_function}({sym.crc_t} crc, const void *data, size_t data_len)'
     else:
-        return '{crc_t} {crc_update_function}(const {cfg_t} *cfg, {crc_t} crc, const void *data, size_t data_len)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_update_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc, const void *data, size_t data_len)'
 
 
 def _use_cfg_in_finalize(opt):
@@ -955,9 +960,9 @@ def _crc_finalize_function_def(opt, sym):
     The definition of the finalize function.
     """
     if _use_cfg_in_finalize(opt):
-        return '{crc_t} {crc_finalize_function}({crc_t} crc)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_finalize_function}({sym.crc_t} crc)'
     else:
-        return '{crc_t} {crc_finalize_function}(const {cfg_t} *cfg, {crc_t} crc)'.format(**sym)
+        return f'{sym.crc_t} {sym.crc_finalize_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc)'
 
 
 def _crc_final_value(opt, sym):
@@ -966,14 +971,14 @@ def _crc_final_value(opt, sym):
     """
     if opt.algorithm == opt.algo_table_driven:
         if opt.reflect_in == opt.reflect_out:
-            return expr.Xor('crc', sym['crc_xor_out']).simplify()
+            return expr.Xor('crc', sym.crc_xor_out).simplify()
         else:
-            reflect_fun = expr.FunctionCall(sym['crc_reflect_function'], ['crc', sym['crc_width']])
-            return expr.Xor(reflect_fun, sym['crc_xor_out']).simplify()
+            reflect_fun = expr.FunctionCall(sym.crc_reflect_function, ['crc', sym.crc_width])
+            return expr.Xor(reflect_fun, sym.crc_xor_out).simplify()
     if opt.reflect_out:
-        reflect_fun = expr.FunctionCall(sym['crc_reflect_function'], ['crc', sym['crc_width']])
-        return expr.Xor(reflect_fun, sym['crc_xor_out']).simplify()
-    return expr.Xor('crc', sym['crc_xor_out']).simplify()
+        reflect_fun = expr.FunctionCall(sym.crc_reflect_function, ['crc', sym.crc_width])
+        return expr.Xor(reflect_fun, sym.crc_xor_out).simplify()
+    return expr.Xor('crc', sym.crc_xor_out).simplify()
 
 
 def _crc_table(opt, sym):
@@ -987,17 +992,17 @@ def _crc_table(opt, sym):
             Comment(opt, '', [
                 'Static table used for the table_driven implementation.',
                 Conditional(opt, '', opt.undefined_crc_parameters, [
-                    'Must be initialised with the {crc_table_gen_function} function.'.format(**sym),
+                    f'Must be initialised with the {sym.crc_table_gen_function} function.',
                     ]),
                 ]),
             Conditional2(opt, '', _use_constant_crc_table(opt), [
                 Conditional2(opt, '', opt.slice_by > 1, [
-                    'static const {crc_t} crc_table[{crc_slice_by}][{crc_table_width}] = {crc_table_init};'.format(**sym),
+                    f'static const {sym.crc_t} crc_table[{sym.crc_slice_by}][{sym.crc_table_width}] = {sym.crc_table_init};',
                     ], [
-                    'static const {crc_t} crc_table[{crc_table_width}] = {crc_table_init};'.format(**sym),
+                    f'static const {sym.crc_t} crc_table[{sym.crc_table_width}] = {sym.crc_table_init};',
                     ]),
                 ], [
-                'static {crc_t} crc_table[{crc_table_width}];'.format(**sym),
+                f'static {sym.crc_t} crc_table[{sym.crc_table_width}];',
                 ]),
             ]
 
@@ -1010,64 +1015,64 @@ def _crc_table_gen(opt, sym):
         return []
     return [
             '', '',
-            'void {crc_table_gen_function}(const {cfg_t} *cfg)'.format(**sym),
+            f'void {sym.crc_table_gen_function}(const {sym.cfg_t} *cfg)',
             '{',
             CodeGen(opt, 4*' ', [
-                '{crc_t} crc;'.format(**sym),
+                f'{sym.crc_t} crc;',
                 'unsigned int i, j;',
                 '',
-                'for (i = 0; i < {cfg_table_width}; i++) '.format(**sym) + '{',
+                f'for (i = 0; i < {sym.cfg_table_width}; i++) ' + '{',
                 CodeGen(opt, 4*' ', [
                     Conditional2(opt, '', opt.reflect_in is None, [
                         'if (cfg->reflect_in) {',
                         CodeGen(opt, 4*' ', [
-                            'crc = {crc_reflect_function}(i, {cfg_table_idx_width});'.format(**sym),
+                            f'crc = {sym.crc_reflect_function}(i, {sym.cfg_table_idx_width});',
                             ]),
                         '} else {',
-                            CodeGen(opt, 4*' ', [
+                        CodeGen(opt, 4*' ', [
                             'crc = i;',
                             ]),
                         '}',
                         ], [
                             Conditional2(opt, '', opt.reflect_in, [
-                                'crc = {crc_reflect_function}(i, {cfg_table_idx_width});'.format(**sym),
+                                f'crc = {sym.crc_reflect_function}(i, {sym.cfg_table_idx_width});',
                                 ], [
                                 'crc = i;',
                                 ]),
                         ]),
-                        'crc <<= {0};'.format(expr.Parenthesis(expr.Add(expr.Sub(sym['cfg_width'], sym['cfg_table_idx_width']), sym['cfg_shift'])).simplify()),
-                        'for (j = 0; j < {cfg_table_idx_width}; j++) '.format(**sym) + '{',
+                    'crc <<= {0};'.format(expr.Parenthesis(expr.Add(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width), sym.cfg_shift)).simplify()),
+                    f'for (j = 0; j < {sym.cfg_table_idx_width}; j++) ' + '{',
+                    CodeGen(opt, 4*' ', [
+                        f'if (crc & {sym.cfg_msb_mask_shifted}) ' + '{',
                         CodeGen(opt, 4*' ', [
-                            'if (crc & {cfg_msb_mask_shifted}) '.format(**sym) + '{',
-                            CodeGen(opt, 4*' ', [
-                                'crc = {0};'.format(expr.Xor(expr.Parenthesis(expr.Shl('crc', 1)), sym['cfg_poly_shifted']).simplify()),
-                                ]),
-                            '} else {',
-                            CodeGen(opt, 4*' ', [
-                                'crc = crc << 1;',
-                                ]),
-                            '}',
+                            'crc = {0};'.format(expr.Xor(expr.Parenthesis(expr.Shl('crc', 1)), sym.cfg_poly_shifted).simplify()),
+                            ]),
+                        '} else {',
+                        CodeGen(opt, 4*' ', [
+                            'crc = crc << 1;',
                             ]),
                         '}',
-                        Conditional(opt, '', opt.reflect_in is None, [
-                            'if (cfg->reflect_in) {',
-                            Conditional2(opt, 4*' ', sym.tbl_shift is None or sym.tbl_shift > 0, [
-                                'crc = {0};'.format(expr.Shl(expr.FunctionCall(sym['crc_reflect_function'], [expr.Shr('crc', sym['cfg_shift']), sym['cfg_width']]), sym['cfg_shift']).simplify()),
-                                ], [
-                                'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
-                                ]),
-                            '}',
-                            ]),
-                        Conditional(opt, '', opt.reflect_in, [
-                            Conditional2(opt, '', sym.tbl_shift is None or sym.tbl_shift > 0, [
-                                'crc = {0};'.format(expr.Shl(expr.FunctionCall(sym['crc_reflect_function'], [expr.Shr('crc', sym['cfg_shift']), sym['cfg_width']]), sym['cfg_shift']).simplify()),
-                                ], [
-                                'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
-                                ]),
-                            ]),
-                        'crc_table[i] = {0};'.format(expr.Shr(expr.Parenthesis(expr.And('crc', sym['cfg_mask_shifted'])), sym['cfg_shift'])),
                         ]),
                     '}',
+                    Conditional(opt, '', opt.reflect_in is None, [
+                        'if (cfg->reflect_in) {',
+                        Conditional2(opt, 4*' ', sym.tbl_shift is None or sym.tbl_shift > 0, [
+                            'crc = {0};'.format(expr.Shl(expr.FunctionCall(sym.crc_reflect_function, [expr.Shr('crc', sym.cfg_shift), sym.cfg_width]), sym.cfg_shift).simplify()),
+                            ], [
+                                f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
+                                ]),
+                        '}',
+                        ]),
+                    Conditional(opt, '', opt.reflect_in, [
+                        Conditional2(opt, '', sym.tbl_shift is None or sym.tbl_shift > 0, [
+                            'crc = {0};'.format(expr.Shl(expr.FunctionCall(sym.crc_reflect_function, [expr.Shr('crc', sym.cfg_shift), sym.cfg_width]), sym.cfg_shift).simplify()),
+                            ], [
+                                f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
+                                ]),
+                            ]),
+                    'crc_table[i] = {0};'.format(expr.Shr(expr.Parenthesis(expr.And('crc', sym.cfg_mask_shifted)), sym.cfg_shift)),
+                    ]),
+                '}',
                 ]),
             '}',
         ]
@@ -1079,16 +1084,15 @@ def _crc_reflect_function_gen(opt, sym):
     """
     if not _use_reflect_func(opt):
         return []
-    if not (opt.reflect_in is None or opt.reflect_in or \
-            opt.reflect_out is None or opt.reflect_out):
+    if not (opt.reflect_in is None or opt.reflect_in or opt.reflect_out is None or opt.reflect_out):
         return []
     return [
             '', '',
-            '{crc_t} {crc_reflect_function}({crc_t} data, size_t data_len)'.format(**sym),
+            f'{sym.crc_t} {sym.crc_reflect_function}({sym.crc_t} data, size_t data_len)',
             '{',
             CodeGen(opt, 4*' ', [
                 'unsigned int i;',
-                '{crc_t} ret;'.format(**sym),
+                f'{sym.crc_t} ret;',
                 '',
                 'ret = data & 0x01;',
                 'for (i = 1; i < data_len; i++) {',
@@ -1116,14 +1120,14 @@ def _crc_init_function_gen(opt, sym):
             CodeGen(opt, 4*' ', [
                 Conditional(opt, '', opt.algorithm == opt.algo_bit_by_bit, [
                     'unsigned int i;',
-                    '{c_bool} bit;'.format(**sym),
-                    '{crc_t} crc = {cfg_xor_in};'.format(**sym),
-                    'for (i = 0; i < {cfg_width}; i++) '.format(**sym) + '{',
+                    f'{sym.c_bool} bit;'
+                    f'{sym.crc_t} crc = {sym.cfg_xor_in};',
+                    f'for (i = 0; i < {sym.cfg_width}; i++) ' + '{',
                     CodeGen(opt, 4*' ', [
                         'bit = crc & 0x01;',
                         'if (bit) {',
                         CodeGen(opt, 4*' ', [
-                            'crc = ((crc ^ {cfg_poly}) >> 1) | {cfg_msb_mask};'.format(**sym),
+                            f'crc = ((crc ^ {sym.cfg_poly}) >> 1) | {sym.cfg_msb_mask};',
                             ]),
                         '} else {',
                         CodeGen(opt, 4*' ', [
@@ -1132,30 +1136,30 @@ def _crc_init_function_gen(opt, sym):
                         '}',
                         ]),
                     '}',
-                    'return crc & {cfg_mask};'.format(**sym),
+                    f'return crc & {sym.cfg_mask};',
                     ]),
                 Conditional(opt, '', opt.algorithm == opt.algo_bit_by_bit_fast, [
-                    'return {cfg_xor_in} & {cfg_mask};'.format(**sym),
+                    f'return {sym.cfg_xor_in} & {sym.cfg_mask};',
                     ]),
                 Conditional(opt, '', opt.algorithm == opt.algo_table_driven, [
                     Conditional2(opt, '', opt.reflect_in is None, [
-                        'if ({cfg_reflect_in}) '.format(**sym) + '{',
-                            CodeGen(opt, 4*' ', [
-                                'return {crc_reflect_function}({cfg_xor_in} & {cfg_mask}, {cfg_width});'.format(**sym),
-                                ]),
-                        '} else {',
-                            CodeGen(opt, 4*' ', [
-                                'return {cfg_xor_in} & {cfg_mask};'.format(**sym),
-                                ]),
-                        '}',
-                    ], [
-                        Conditional2(opt, '', opt.algorithm == opt.reflect_in, [
-                            'return {crc_reflect_function}({cfg_xor_in} & {cfg_mask}, {cfg_width});'.format(**sym),
-                            ], [
-                            'return {cfg_xor_in} & {cfg_mask};'.format(**sym),
+                        f'if ({sym.cfg_reflect_in}) ' + '{',
+                        CodeGen(opt, 4*' ', [
+                            f'return {sym.crc_reflect_function}({sym.cfg_xor_in} & {sym.cfg_mask}, {sym.cfg_width});',
                             ]),
+                        '} else {',
+                        CodeGen(opt, 4*' ', [
+                            f'return {sym.cfg_xor_in} & {sym.cfg_mask};',
+                            ]),
+                        '}',
+                        ], [
+                            Conditional2(opt, '', opt.algorithm == opt.reflect_in, [
+                                f'return {sym.crc_reflect_function}({sym.cfg_xor_in} & {sym.cfg_mask}, {sym.cfg_width});',
+                                ], [
+                                    f'return {sym.cfg_xor_in} & {sym.cfg_mask};',
+                                    ]),
+                                ]),
                         ]),
-                    ]),
                 ]),
             '}',
             ]
@@ -1170,20 +1174,20 @@ def _crc_update_function_gen(opt, sym):
             '', '',
             _crc_update_function_def(opt, sym),
             '{',
-            CodeGen(opt, 4*' ', [ 'const unsigned char *d = (const unsigned char *)data;' ]),
+            CodeGen(opt, 4*' ', ['const unsigned char *d = (const unsigned char *)data;']),
             ]
     if opt.algorithm == opt.algo_bit_by_bit:
         out += [
                 CodeGen(opt, 4*' ', [
                     'unsigned int i;',
-                    '{c_bool} bit;'.format(**sym),
+                    f'{sym.c_bool} bit;',
                     'unsigned char c;',
                     '',
                     'while (data_len--) {',
                     Conditional2(opt, 4*' ', opt.reflect_in is None, [
-                        'if (' + sym['cfg_reflect_in'] + ') {',
+                        'if (' + sym.cfg_reflect_in + ') {',
                         CodeGen(opt, 4*' ', [
-                            'c = {crc_reflect_function}(*d++, 8);'.format(**sym),
+                            f'c = {sym.crc_reflect_function}(*d++, 8);',
                             ]),
                         '} else {',
                         CodeGen(opt, 4*' ', [
@@ -1192,32 +1196,32 @@ def _crc_update_function_gen(opt, sym):
                         '}',
                         ], [
                         Conditional2(opt, '', opt.reflect_in, [
-                            'c = {crc_reflect_function}(*d++, 8);'.format(**sym),
+                            f'c = {sym.crc_reflect_function}(*d++, 8);',
                             ], [
                             'c = *d++;',
                             ]),
                         ]),
 
+                    CodeGen(opt, 4*' ', [
+                        'for (i = 0; i < 8; i++) {',
                         CodeGen(opt, 4*' ', [
-                            'for (i = 0; i < 8; i++) {',
+                            Conditional2(opt, '', opt.c_std == 'C89', [
+                                f'bit = !!(crc & {sym.cfg_msb_mask});',
+                                ], [
+                                f'bit = crc & {sym.cfg_msb_mask};',
+                                ]),
+                            'crc = (crc << 1) | ((c >> (7 - i)) & 0x01);',
+                            'if (bit) {',
                             CodeGen(opt, 4*' ', [
-                                Conditional2(opt, '', opt.c_std == 'C89', [
-                                    'bit = !!(crc & {cfg_msb_mask});'.format(**sym),
-                                    ], [
-                                    'bit = crc & {cfg_msb_mask};'.format(**sym),
-                                    ]),
-                                'crc = (crc << 1) | ((c >> (7 - i)) & 0x01);',
-                                'if (bit) {',
-                                CodeGen(opt, 4*' ', [
-                                    'crc ^= {cfg_poly};'.format(**sym),
-                                    ]),
-                                '}',
+                                f'crc ^= {sym.cfg_poly};',
                                 ]),
                             '}',
-                            'crc &= {cfg_mask};'.format(**sym),
+                            ]),
+                        '}',
+                        f'crc &= {sym.cfg_mask};',
                         ]),
                     '}',
-                    'return crc & {cfg_mask};'.format(**sym),
+                    f'return crc & {sym.cfg_mask};',
                     ]),
                 ]
 
@@ -1225,15 +1229,15 @@ def _crc_update_function_gen(opt, sym):
         out += [
                 CodeGen(opt, 4*' ', [
                     'unsigned int i;',
-                    '{crc_t} bit;'.format(**sym),
+                    f'{sym.crc_t} bit;',
                     'unsigned char c;',
                     '',
                     'while (data_len--) {',
                     CodeGen(opt, 4*' ', [
-                        Conditional2(opt, '', opt.reflect_in == None, [
-                            'if (' + sym['cfg_reflect_in'] + ') {',
+                        Conditional2(opt, '', opt.reflect_in is None, [
+                            'if (' + sym.cfg_reflect_in + ') {',
                             CodeGen(opt, 4*' ', [
-                                'c = {crc_reflect_function}(*d++, 8);'.format(**sym),
+                                f'c = {sym.crc_reflect_function}(*d++, 8);',
                                 ]),
                             '} else {',
                             CodeGen(opt, 4*' ', [
@@ -1249,21 +1253,19 @@ def _crc_update_function_gen(opt, sym):
                             'for (i = 0x80; i > 0; i >>= 1) {',
                             ]),
                         CodeGen(opt, 4*' ', [
-                            'bit = ({0}) ^ ({1});'.format(
-                                expr.And('crc', sym['cfg_msb_mask']).simplify(),
-                                '(c & i) ? {0} : 0'.format(sym['cfg_msb_mask'])),
+                            'bit = ({0}) ^ ({1});'.format(expr.And('crc', sym.cfg_msb_mask).simplify(), '(c & i) ? {0} : 0'.format(sym.cfg_msb_mask)),
                             'crc <<= 1;',
                             'if (bit) {',
                             CodeGen(opt, 4*' ', [
-                                'crc ^= {cfg_poly};'.format(**sym),
+                                f'crc ^= {sym.cfg_poly};',
                                 ]),
                             '}',
                             ]),
                         '}',
-                        'crc &= {cfg_mask};'.format(**sym)
+                        f'crc &= {sym.cfg_mask};'
                         ]),
                     '}',
-                    'return {0};'.format(expr.And('crc', sym['cfg_mask']).simplify()),
+                    'return {0};'.format(expr.And('crc', sym.cfg_mask).simplify()),
                     ]),
                 ]
 
@@ -1272,7 +1274,7 @@ def _crc_update_function_gen(opt, sym):
                 CodeGen(opt, 4*' ', [
                     'unsigned int tbl_idx;',
                     '',
-                    Conditional2(opt, '', opt.reflect_in == None, [
+                    Conditional2(opt, '', opt.reflect_in is None, [
                         'if (cfg->reflect_in) {',
                         CodeGen(opt, 4*' ', [
                             'while (data_len--) {',
@@ -1294,8 +1296,8 @@ def _crc_update_function_gen(opt, sym):
                         '}',
                         ], [
                             Conditional(opt, '', opt.slice_by > 1, [
-                                '/* Align to a multiple of {crc_slice_by} bytes */'.format(**sym),
-                                'while (data_len && (((uintptr_t)(const void *)d) % {crc_slice_by} != 0))'.format(**sym) + ' {',
+                                f'/* Align to a multiple of {sym.crc_slice_by} bytes */',
+                                f'while (data_len && (((uintptr_t)(const void *)d) % {sym.crc_slice_by} != 0))' + ' {',
                                 CodeGen(opt, 4*' ', [
                                     _crc_table_core_algorithm(opt, sym),
                                     'data_len--;',
@@ -1312,14 +1314,13 @@ def _crc_update_function_gen(opt, sym):
                                 ]),
                             '}',
                         ]),
-                    'return {0};'.format(expr.And('crc', sym['cfg_mask']).simplify()),
+                    'return {0};'.format(expr.And('crc', sym.cfg_mask).simplify()),
                     ]),
             ]
     out += [
             '}',
             ]
     return out
-
 
 
 def _crc_finalize_function_gen(opt, sym):
@@ -1337,48 +1338,48 @@ def _crc_finalize_function_gen(opt, sym):
         out += [
                 Conditional(opt, 4*' ', opt.algorithm == opt.algo_bit_by_bit, [
                     'unsigned int i;',
-                    '{c_bool} bit;'.format(**sym),
+                    f'{sym.c_bool} bit;',
                     '',
-                    'for (i = 0; i < ' + sym['cfg_width'] + '; i++) {',
+                    'for (i = 0; i < ' + sym.cfg_width + '; i++) {',
                     CodeGen(opt, 4*' ', [
                         Conditional2(opt, '', opt.c_std == 'C89', [
-                            'bit = !!(crc & {cfg_msb_mask});'.format(**sym)
+                            f'bit = !!(crc & {sym.cfg_msb_mask});'
                             ], [
-                            'bit = crc & {cfg_msb_mask};'.format(**sym),
+                            f'bit = crc & {sym.cfg_msb_mask};',
                             ]),
                         'crc <<= 1;',
                         'if (bit) {',
                         CodeGen(opt, 4*' ', [
-                            'crc ^= {cfg_poly};'.format(**sym),
+                            f'crc ^= {sym.cfg_poly};',
                             ]),
                         '}',
                         ]),
                     '}',
                     Conditional(opt, '', opt.reflect_out is None, [
-                        'if (' + sym['cfg_reflect_out'] + ') {',
+                        'if (' + sym.cfg_reflect_out + ') {',
                         CodeGen(opt, 4*' ', [
-                            'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                            f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                             ]),
                         '}',
                         ]),
                     Conditional(opt, '', opt.reflect_out, [
-                        'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                        f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                         ]),
                     ]),
 
-                 Conditional(opt, 4*' ', opt.algorithm == opt.algo_bit_by_bit_fast, [
+                Conditional(opt, 4*' ', opt.algorithm == opt.algo_bit_by_bit_fast, [
                     Conditional(opt, '', opt.reflect_out is None, [
-                        'if (' + sym['cfg_reflect_out'] + ') {',
+                        'if (' + sym.cfg_reflect_out + ') {',
                         CodeGen(opt, 4*' ', [
-                            'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                            f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                             ]),
                         '}',
                     ]),
                     Conditional(opt, '', opt.reflect_out, [
-                        'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                        f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                         ]),
                     ]),
-                 ]
+                ]
 
     if opt.algorithm == opt.algo_table_driven:
         if opt.reflect_in is None or opt.reflect_out is None:
@@ -1392,22 +1393,23 @@ def _crc_finalize_function_gen(opt, sym):
                     CodeGen(opt, 4*' ', [
                         'if (' + cond + ') {',
                         CodeGen(opt, 4*' ', [
-                            'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                            f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                             ]),
                         '}',
                         ]),
                     ]
         elif opt.reflect_in != opt.reflect_out:
             out += [
-                    'crc = {crc_reflect_function}(crc, {cfg_width});'.format(**sym),
+                    f'crc = {sym.crc_reflect_function}(crc, {sym.cfg_width});',
                     ]
     out += [
             CodeGen(opt, 4*' ', [
-                'return {0};'.format(expr.And(expr.Parenthesis(expr.Xor('crc', sym['cfg_xor_out'])), sym['cfg_mask']).simplify()),
+                'return {0};'.format(expr.And(expr.Parenthesis(expr.Xor('crc', sym.cfg_xor_out)), sym.cfg_mask).simplify()),
                 ]),
             '}',
             ]
     return out
+
 
 def _crc_table_core_algorithm(opt, sym):
     """
@@ -1424,6 +1426,7 @@ def _crc_table_core_algorithm(opt, sym):
     ]
     return CodeGen(opt, '', out)
 
+
 def _crc_table_core_algorithm_reflected(opt, sym):
     """
     Return the core loop of the table-driven algorithm, reflected variant.
@@ -1432,37 +1435,40 @@ def _crc_table_core_algorithm_reflected(opt, sym):
     if opt.width is not None and opt.tbl_idx_width is not None and opt.width <= opt.tbl_idx_width:
         crc_xor_expr = '0'
     else:
-        crc_xor_expr = '(crc >> {cfg_table_idx_width})'.format(**sym)
+        crc_xor_expr = f'(crc >> {sym.cfg_table_idx_width})'
 
     if opt.tbl_idx_width == 8:
         if opt.slice_by > 1:
             crc_lookup = 'crc_table[0][tbl_idx]'
         else:
             crc_lookup = 'crc_table[tbl_idx]'
+        crc_exp = expr.And(expr.Parenthesis(expr.Xor(crc_lookup, expr.Parenthesis(expr.Shr('crc', sym.cfg_table_idx_width)))), sym.cfg_mask).simplify()
         out += [
                 Conditional2(opt, '', opt.width is None or opt.width > 8, [
-                    'tbl_idx = (crc ^ *d) & {crc_table_mask};'.format(**sym),
+                    f'tbl_idx = (crc ^ *d) & {sym.crc_table_mask};',
                     ], [
                     'tbl_idx = crc ^ *d;',
                     ]),
-                    'crc = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_lookup, expr.Parenthesis(expr.Shr('crc', sym['cfg_table_idx_width'])))), sym['cfg_mask']).simplify()),
+                f'crc = {crc_exp};',
                 ]
     else:
-        crc_lookup = 'crc_table[tbl_idx & {crc_table_mask}]'.format(**sym)
+        crc_lookup = f'crc_table[tbl_idx & {sym.crc_table_mask}]'
         for i in range(8 // opt.tbl_idx_width):
+            idx = expr.Xor('crc', expr.Parenthesis(expr.Shr('*d', expr.Parenthesis(expr.Mul(i, sym.cfg_table_idx_width))))).simplify()
             out += [
-                'tbl_idx = {0};'.format(expr.Xor('crc', expr.Parenthesis(expr.Shr('*d', expr.Parenthesis(expr.Mul(i, sym['cfg_table_idx_width']))))).simplify()),
+                f'tbl_idx = {idx};',
                 'crc = {0};'.format(expr.Xor(crc_lookup, crc_xor_expr).simplify())
                 ]
     return CodeGen(opt, '', out)
+
 
 def _crc_table_core_algorithm_nonreflected(opt, sym):
     """
     Return the core loop of the table-driven algorithm, non-reflected variant.
     """
     out = []
-    if opt.width == None:
-        crc_shifted_right = expr.Parenthesis(expr.Shr('crc', expr.Parenthesis(expr.Sub(sym['cfg_width'], sym['cfg_table_idx_width'])))).simplify()
+    if opt.width is None:
+        crc_shifted_right = expr.Parenthesis(expr.Shr('crc', expr.Parenthesis(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width)))).simplify()
     elif opt.width < 8:
         shift_val = opt.width - opt.tbl_idx_width
         if shift_val < 0:
@@ -1476,7 +1482,7 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
     if opt.width is not None and opt.tbl_idx_width is not None and opt.width <= opt.tbl_idx_width:
         crc_xor_expr = '0'
     else:
-        crc_xor_expr = '(crc << {cfg_table_idx_width})'.format(**sym)
+        crc_xor_expr = f'(crc << {sym.cfg_table_idx_width})'
 
     if opt.tbl_idx_width == 8:
         if opt.slice_by > 1:
@@ -1485,14 +1491,15 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
             crc_lookup = 'crc_table[tbl_idx]'
         out += [
                 Conditional2(opt, '', opt.width is None or opt.width > 8, [
-                    'tbl_idx = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_shifted_right, '*d')), sym['crc_table_mask']).simplify())
+                    'tbl_idx = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_shifted_right, '*d')),
+                                                     sym.crc_table_mask).simplify())
                     ], [
                     'tbl_idx = {0};'.format(expr.Xor(crc_shifted_right, '*d').simplify())
                     ]),
-                    'crc = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_lookup, crc_xor_expr)), sym['cfg_mask']).simplify())
+                'crc = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_lookup, crc_xor_expr)), sym.cfg_mask).simplify())
                 ]
     else:
-        crc_lookup = 'crc_table[tbl_idx & {crc_table_mask}]'.format(**sym)
+        crc_lookup = f'crc_table[tbl_idx & {sym.crc_table_mask}]'
         for i in range(8 // opt.tbl_idx_width):
             str_idx = '{0:d}'.format(8 - (i + 1) * opt.tbl_idx_width)
             out += [
@@ -1500,6 +1507,7 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
                     'crc = {0};'.format(expr.Xor(crc_lookup, crc_xor_expr).simplify()),
                     ]
     return CodeGen(opt, '', out)
+
 
 def _crc_table_slice_by_algorithm(opt, sym):
     update_be = []
@@ -1520,32 +1528,32 @@ def _crc_table_slice_by_algorithm(opt, sym):
 
     out = [
             'const uint32_t *d32 = (const uint32_t *)d;',
-            'while (data_len >= {crc_slice_by})'.format(**sym),
+            f'while (data_len >= {sym.crc_slice_by})',
             '{',
             CodeGen(opt, 4*' ', [
                 CodeGen(opt, None, [
                     '#if __BYTE_ORDER == __BIG_ENDIAN',
                     ]),
-                '{crc_t} d1 = *d32++ ^ le16toh(crc);'.format(**sym),
+                f'{sym.crc_t} d1 = *d32++ ^ le16toh(crc);',
                 Conditional(opt, '', opt.slice_by >= 8, [
-                    '{crc_t} d2 = *d32++;'.format(**sym),
+                    f'{sym.crc_t} d2 = *d32++;',
                     ]),
                 Conditional(opt, '', opt.slice_by >= 16, [
-                    '{crc_t} d3 = *d32++;'.format(**sym),
-                    '{crc_t} d4 = *d32++;'.format(**sym),
+                    f'{sym.crc_t} d3 = *d32++;',
+                    f'{sym.crc_t} d4 = *d32++;',
                     ]),
                 'crc  =',
                 CodeGen(opt, 4*' ', update_be),
                 CodeGen(opt, None, [
                     '#else',
                     ]),
-                '{crc_t} d1 = *d32++ ^ crc;'.format(**sym),
+                f'{sym.crc_t} d1 = *d32++ ^ crc;',
                 Conditional(opt, '', opt.slice_by >= 8, [
-                    '{crc_t} d2 = *d32++;'.format(**sym),
+                    f'{sym.crc_t} d2 = *d32++;',
                     ]),
                 Conditional(opt, '', opt.slice_by >= 16, [
-                    '{crc_t} d3 = *d32++;'.format(**sym),
-                    '{crc_t} d4 = *d32++;'.format(**sym),
+                    f'{sym.crc_t} d3 = *d32++;',
+                    f'{sym.crc_t} d4 = *d32++;',
                     ]),
                 'crc  =',
                 CodeGen(opt, 4*' ', update_le),
@@ -1553,7 +1561,7 @@ def _crc_table_slice_by_algorithm(opt, sym):
                     '#endif',
                     ]),
                 '',
-                'data_len -= {crc_slice_by};'.format(**sym),
+                f'data_len -= {sym.crc_slice_by};',
                 ]),
             '}',
             '',

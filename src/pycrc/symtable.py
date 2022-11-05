@@ -82,12 +82,9 @@ class SymbolTable:
         self.cfg_mask = self.crc_mask if self._opt.mask is not None else 'cfg->crc_mask'
         self.cfg_msb_mask = self.crc_msb_mask if self._opt.msb_mask is not None else 'cfg->msb_mask'
         self.cfg_shift = self.crc_shift if self.tbl_shift is not None else 'cfg->crc_shift'
-        self.cfg_poly_shifted = '(' + self.cfg_poly + ' << ' + self.cfg_shift + ')' \
-                                if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_poly
-        self.cfg_mask_shifted = '(' + self.cfg_mask + ' << ' + self.cfg_shift + ')' \
-                                if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_mask
-        self.cfg_msb_mask_shifted = '(' + self.cfg_msb_mask + ' << ' + self.cfg_shift + ')' \
-                                    if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_msb_mask
+        self.cfg_poly_shifted = f'({self.cfg_poly} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_poly
+        self.cfg_mask_shifted = f'({self.cfg_mask} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_mask
+        self.cfg_msb_mask_shifted = f'({self.cfg_msb_mask} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_msb_mask
 
         self.c_bool = 'int' if self._opt.c_std == 'C89' else 'bool'
         self.c_true = '1' if self._opt.c_std == 'C89' else 'true'
@@ -103,7 +100,13 @@ class SymbolTable:
         self.crc_finalize_function = self._opt.symbol_prefix + 'finalize'
 
         self.crc_init_value = _get_init_value(self._opt)
-        self.crc_table_init = _get_table_init(self._opt)
+        self._crc_table_init = None
+
+    @property
+    def crc_table_init(self):
+        if self._crc_table_init is None:
+            self._crc_table_init = _get_table_init(self._opt)
+        return self._crc_table_init
 
 
 def _pretty_str(value):

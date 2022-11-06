@@ -2,30 +2,37 @@
 set -e
 
 PYCRC=`dirname $0`/../src/pycrc.py
+tmpdir=
 
 cleanup() {
-    rm -f a.out performance.c crc_bbb.[ch] crc_bbf.[ch] crc_tb[l4].[ch] crc_sb4.[ch]
+    if [ -d "$tmpdir" ]; then
+        rm -rf "$tmpdir"
+    fi
 }
 
 trap cleanup 0 1 2 3 15
+tmpdir=`mktemp -t -d pycrc-perf-XXXXXXXX`
 
 model=crc-32
 
 prefix=bbb
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o crc_$prefix.c --algo bit-by-bit
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o crc_$prefix.h --algo bit-by-bit
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo bit-by-bit
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo bit-by-bit
 prefix=bbf
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o crc_$prefix.h --algo bit-by-bit-fast
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o crc_$prefix.c --algo bit-by-bit-fast
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo bit-by-bit-fast
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo bit-by-bit-fast
 prefix=tbl
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o crc_$prefix.h --algo table-driven
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o crc_$prefix.c --algo table-driven
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo table-driven
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo table-driven
 prefix=tb4
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o crc_$prefix.h --algo table-driven --table-idx-width 4
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o crc_$prefix.c --algo table-driven --table-idx-width 4
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo table-driven --table-idx-width 4
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo table-driven --table-idx-width 4
 prefix=sb4
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o crc_$prefix.h --algo table-driven --slice-by 4
-$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o crc_$prefix.c --algo table-driven --slice-by 4
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo table-driven --slice-by 4
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo table-driven --slice-by 4
+prefix=sb16
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate h -o $tmpdir/crc_$prefix.h --algo table-driven --slice-by 16
+$PYCRC --model $model --symbol-prefix crc_${prefix}_ --generate c -o $tmpdir/crc_$prefix.c --algo table-driven --slice-by 16
 
 
 print_main() {
@@ -35,6 +42,7 @@ cat <<EOF
 #include "crc_tbl.h"
 #include "crc_tb4.h"
 #include "crc_sb4.h"
+#include "crc_sb16.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -51,6 +59,7 @@ void test_bbf(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t clock
 void test_tbl(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t clock_per_sec);
 void test_tb4(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t clock_per_sec);
 void test_sb4(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t clock_per_sec);
+void test_sb16(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t clock_per_sec);
 
 /**
  * Print results.
@@ -102,6 +111,9 @@ int main(void)
     // table-driven slice-by 4
     test_sb4(buf, sizeof(buf), NUM_RUNS, clock_per_sec);
 
+    // table-driven slice-by 16
+    test_sb16(buf, sizeof(buf), NUM_RUNS, clock_per_sec);
+
     return 0;
 }
 EOF
@@ -136,12 +148,13 @@ void test_${prefix}(unsigned char *buf, size_t buf_len, size_t num_runs, clock_t
 EOF
 }
 
-print_main > performance.c
-print_routine "bit-by-bit" bbb >> performance.c
-print_routine "bit-by-bit-fast" bbf >> performance.c
-print_routine "table-driven" tbl >> performance.c
-print_routine "table-driven idx4" tb4 >> performance.c
-print_routine "table-driven sb4" sb4 >> performance.c
+print_main > $tmpdir/performance.c
+print_routine "bit-by-bit" bbb >> $tmpdir/performance.c
+print_routine "bit-by-bit-fast" bbf >> $tmpdir/performance.c
+print_routine "table-driven" tbl >> $tmpdir/performance.c
+print_routine "table-driven idx4" tb4 >> $tmpdir/performance.c
+print_routine "table-driven sb4" sb4 >> $tmpdir/performance.c
+print_routine "table-driven sb16" sb16 >> $tmpdir/performance.c
 
-cc -W -Wall -O3 crc_bbb.c crc_bbf.c crc_tbl.c crc_tb4.c crc_sb4.c performance.c
-./a.out
+cc -W -Wall -O3 -o $tmpdir/perf $tmpdir/crc_bbb.c $tmpdir/crc_bbf.c $tmpdir/crc_tbl.c $tmpdir/crc_tb4.c $tmpdir/crc_sb4.c $tmpdir/crc_sb16.c $tmpdir/performance.c
+$tmpdir/perf

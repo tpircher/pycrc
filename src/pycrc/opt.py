@@ -376,7 +376,8 @@ of the following parameters:
                 self.algorithm = self.algo_table_driven
             elif self.algorithm not in set(
                     [self.algo_bit_by_bit, self.algo_bit_by_bit_fast, self.algo_table_driven]):
-                self.__error("select an algorithm to be used in the generated file")
+                self.__error("select an algorithm to be used in the generated file. "
+                             "(Hint: use the --algorithm option.)")
         else:
             if self.tbl_idx_width != 8:
                 self.__warning("reverting to Table Index Width = 8 "

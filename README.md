@@ -27,7 +27,12 @@ Install pycrc (if required) using pip:
 
     python3 -m pip install pycrc
 
-This will install a `pycrc` binary in the path.
+or apt (on Debian 13 and later, Ubuntu 23.10 and later, and
+derivatives):
+
+    sudo apt install pycrc
+
+Either of these will install a `pycrc` binary in the path.
 
 
 Getting help

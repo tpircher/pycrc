@@ -91,6 +91,8 @@ class Crc():
         else:
             self.crc_shift = 0
 
+        self.tbl = self.gen_table()
+
     def __get_nondirect_init(self, init):
         """
         return the non-direct init if the direct algorithm has been selected.
@@ -211,20 +213,18 @@ class Crc():
         if isinstance(in_data, str):
             in_data = bytearray(in_data, 'utf-8')
 
-        tbl = self.gen_table()
-
         if not self.reflect_in:
             reg = self.direct_init << self.crc_shift
             for octet in in_data:
                 tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xff
                 reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^
-                       (tbl[0][tblidx] << self.crc_shift)) & (self.mask << self.crc_shift)
+                       (self.tbl[0][tblidx] << self.crc_shift)) & (self.mask << self.crc_shift)
             reg = reg >> self.crc_shift
         else:
             reg = self.reflect(self.direct_init, self.width)
             for octet in in_data:
                 tblidx = (reg ^ octet) & 0xff
-                reg = ((reg >> self.tbl_idx_width) ^ tbl[0][tblidx]) & self.mask
+                reg = ((reg >> self.tbl_idx_width) ^ self.tbl[0][tblidx]) & self.mask
             reg = self.reflect(reg, self.width) & self.mask
 
         if self.reflect_out:

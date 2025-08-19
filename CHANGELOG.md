@@ -5,11 +5,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
-## [Unreleased]
+## [v0.11.0] - 2025-08-19
 
 ### Added
 
 - Add support for GitHub CI
+- Add build instructions for Debian/Ubuntu and derivatives.
+
+### Changed
+
+- Minimum Python version is 3.8
+- The lookup table for the table-driven algorithm is now initialised at
+  startup, speeding up the CRC calculation when called multiple times.
+- Remove the obsolete `__init__.py` file.
+- Minor speed improvement.
 
 ### Fixed
 

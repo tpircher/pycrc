@@ -8,7 +8,7 @@ calculator and C source code generator.
 System Requirements
 -------------------
 
-Python 3.7 or newer is required to run pycrc.
+Python 3.8 or newer is required to run pycrc.
 The last version compatible with Python 2 is v0.9.x.
 
 Running pycrc

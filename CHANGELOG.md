@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
+## UNRELEASED
+
+### Added
+
+### Changed
+
+- Minimum Python version is 3.10
+- Modernize the build environment:
+  - Switch build backend to hatchling
+  - Switch from flake8 to ruff
+
+### Fixed
+
+
 ## [v0.11.0] - 2025-08-19
 
 ### Added
@@ -23,6 +37,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - Make flake8 happy
+
 
 ## [v0.10.0] - 2022-11-01
 

@@ -1,22 +1,6 @@
-def get_version():
-    try:
-        import importlib.metadata
-        return importlib.metadata.version("pycrc")
-    except:     # noqa: E722
-        pass
-    try:
-        import re
-        import os
-        with open(os.path.join('..', '..', 'pyproject.toml'), 'r') as file:
-            text = file.read()
-        pattern = re.compile(r"""^version *= *["']([^'"]*)['"]""",  re.MULTILINE)
-        m = re.search(pattern, text)
-        if m:
-            return m[1]
-    except FileNotFoundError:
-        pass
-    return 'unknown'
+"""pycrc -- a parameterisable CRC calculation utility and C source code generator."""
 
-
-__version__ = get_version()
+__version__ = "0.11.0"
 __author__ = "Thomas Pircher"
+
+__all__ = ["__version__", "__author__"]

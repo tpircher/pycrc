@@ -1,11 +1,32 @@
-.svn
-.*.swp
-*.pyc
-*.pyo
-__pycache__
-/src/pycrc.egg-info
-/dist
-/build
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage / lint caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editors / OS
+.svn/
+*.swp
+.DS_Store
+
+# Generated documentation
 /doc/pycrc.1
 /doc/pycrc.html
 /doc/docbook.css

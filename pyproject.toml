@@ -1,28 +1,83 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "pycrc"
-version = "0.11.0"
-authors = [
-  { name="Thomas Pircher", email="tehpeh-web@tty1.net" },
-]
 description = "A free, easy to use Cyclic Redundancy Check source code generator for C/C++"
 readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Thomas Pircher", email = "tehpeh-web@tty1.net" },
 ]
-dependencies = [
-    "importlib-metadata >= 4.0",
+requires-python = ">=3.10"
+keywords = ["crc", "checksum", "cyclic-redundancy-check", "code-generator", "c"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.5",
 ]
 
 [project.urls]
-"Homepage" = "https://pycrc.org"
+Homepage = "https://pycrc.org"
+Documentation = "https://pycrc.org/pycrc.html"
 "Bug Tracker" = "https://github.com/tpircher/pycrc/issues"
+"Source Code" = "https://github.com/tpircher/pycrc"
 
 [project.scripts]
 pycrc = "pycrc.main:main"
+
+[tool.hatch.version]
+path = "src/pycrc/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pycrc"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/test",
+    "/doc",
+    "/AUTHORS",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/README.md",
+    "/pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 127
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/pycrc"]
+
+[tool.coverage.report]
+show_missing = true

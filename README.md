@@ -8,7 +8,7 @@ calculator and C source code generator.
 System Requirements
 -------------------
 
-Python 3.8 or newer is required to run pycrc.
+Python 3.10 or newer is required to run pycrc.
 The last version compatible with Python 2 is v0.9.x.
 
 Running pycrc
@@ -33,6 +33,30 @@ derivatives):
     sudo apt install pycrc
 
 Either of these will install a `pycrc` binary in the path.
+
+Once installed you can also run it as a module:
+
+    python3 -m pycrc [options]
+
+
+Development
+-----------
+
+Create a virtual environment and install the package in editable mode together
+with the development tools:
+
+    python3 -m venv .venv
+    . .venv/bin/activate
+    python3 -m pip install -e ".[dev]"
+
+Run the test suite with pytest and check the code style with ruff:
+
+    pytest
+    ruff check .
+
+Build the source and wheel distributions with:
+
+    python3 -m build
 
 
 Getting help

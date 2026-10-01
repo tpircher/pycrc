@@ -67,7 +67,7 @@ generate() {
 populate() {
     outdir=$1
     mkdir -p "$outdir"
-    models=`PYTHONPATH=.. python3 -c 'import src.pycrc.models as m; print(" ".join(m.CrcModels().names()))'`
+    models=`PYTHONPATH=../src python3 -c 'import pycrc.models as m; print(" ".join(m.CrcModels().names()))'`
     for model in "undefined" $models; do
         for algo in "bbb" "bbf" "tbl"; do
             for cstd in c89 c99; do

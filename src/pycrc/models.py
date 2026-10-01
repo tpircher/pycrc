@@ -323,9 +323,12 @@ class CrcModels():
     def get_params(self, model):
         """
         This function returns the parameters of a given model.
+
+        A copy of the model is returned so that callers cannot accidentally
+        modify the (constant) model definitions.
         """
         model = model.lower()
         for i in self.models:
             if i['name'] == model:
-                return i
+                return dict(i)
         return None

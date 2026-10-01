@@ -73,6 +73,9 @@ class TestCodeGen:
     def test_incomplete_model_reflected_init(self):
         compile_and_run_incomplete_reflected_init()
 
+    def test_symbol_prefix_incomplete_model(self):
+        compile_and_run_symbol_prefix()
+
 
 def run_cmd(cmd):
     LOGGER.info(' '.join(cmd))
@@ -161,6 +164,21 @@ def compile_and_run_incomplete_reflected_init():
             args = args_from_model(m) + ['--algorithm', 'tbl', '--std', 'c99']
             run_args = args_from_model({param: model[param] for param in erased})
             compile_and_run(tmpdir, args, run_args, 'incomplete_reflect_init', check)
+
+
+def compile_and_run_symbol_prefix():
+    """
+    Regression test for --symbol-prefix.
+
+    The generated getopt helpers and the cfg initialisation code must use the
+    configured symbol prefix (e.g. my_t instead of crc_t). Otherwise the
+    generated code does not compile. Use an undefined model so that all the
+    option-handling helpers are emitted.
+    """
+    model = CrcModels().get_params('crc-32')
+    with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
+        args = ['--symbol-prefix', 'my_', '--algorithm', 'tbl', '--std', 'c99']
+        compile_and_run(tmpdir, args, args_from_model(model), 'symbol_prefix', model['check'])
 
 
 def compile_and_run_variable_width(algo, cstd):

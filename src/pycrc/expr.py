@@ -194,8 +194,6 @@ class Sub(Expression):
         rhs = self.rhs.simplify()
         if lhs.is_int() and rhs.is_int():
             return Terminal(lhs.val - rhs.val)
-        if lhs.is_int(0):
-            return rhs
         if rhs.is_int(0):
             return lhs
         return Sub(lhs, rhs)

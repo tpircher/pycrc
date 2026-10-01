@@ -110,12 +110,12 @@ def check_hexstring(opt):
     if opt.undefined_crc_parameters:
         sys.stderr.write("{0:s}: error: undefined parameters\n".format(progname))
         sys.exit(1)
-    if len(opt.check_string) % 2 != 0:
-        opt.check_string = "0" + opt.check_string
-    opt.check_string = bytes(opt.check_string, 'utf_8')
+    hex_string = opt.check_string
+    if len(hex_string) % 2 != 0:
+        hex_string = "0" + hex_string
     try:
-        check_str = bytearray(binascii.unhexlify(opt.check_string))
-    except TypeError:
+        check_str = bytearray(binascii.unhexlify(bytes(hex_string, 'utf_8')))
+    except (binascii.Error, ValueError):
         sys.stderr.write(
             "{0:s}: error: invalid hex string {1:s}\n".format(progname, opt.check_string))
         sys.exit(1)

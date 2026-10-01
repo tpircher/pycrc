@@ -23,6 +23,14 @@ class TestCli:
                 check_crc(args + ["--check-hexstring", ''.join([f"{i:02x}" for i in check_bytes])], expected_crc)
                 check_crc(args + ["--check-file", f.name], expected_crc)
 
+    def test_invalid_hexstring(self):
+        ret = subprocess.run(
+            ["python3", "src/pycrc.py", "--model", "crc-32", "--check-hexstring", "zz"],
+            capture_output=True, text=True)
+        assert ret.returncode != 0
+        assert "invalid hex string" in ret.stderr
+        assert "Traceback" not in ret.stderr
+
 
 def run_cmd(cmd):
     LOGGER.info(' '.join(cmd))

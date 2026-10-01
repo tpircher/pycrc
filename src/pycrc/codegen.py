@@ -297,7 +297,7 @@ class File(CodeGen):
                         '/* internal parameters */',
                         '{0:24s}    {1}'.format(self.sym.crc_t + ' msb_mask;',
                                                 '/*!< a bitmask with the Most Significant Bit set to 1'),
-                        33*' ' + 'initialise as (crc_t)1u << (width - 1) */',
+                        33*' ' + f'initialise as ({self.sym.crc_t})1u << (width - 1) */',
                         '{0:24s}    {1}'.format(self.sym.crc_t + ' crc_mask;',
                                                 '/*!< a bitmask with all width bits set to 1'),
                         33*' ' + 'initialise as (cfg->msb_mask - 1) | cfg->msb_mask */',
@@ -590,10 +590,10 @@ class File(CodeGen):
                 Conditional(self.opt, '', self.opt.poly is None or self.opt.xor_in is None or self.opt.xor_out is None, [
                     '',
                     '',
-                    'static crc_t xtoi(const char *str)',
+                    f'static {self.sym.crc_t} xtoi(const char *str)',
                     '{',
                     CodeGen(self.opt, 4*' ', [
-                        'crc_t ret = 0;',
+                        f'{self.sym.crc_t} ret = 0;',
                         '',
                         'if (!str) {',
                         CodeGen(self.opt, 4*' ', [
@@ -783,7 +783,7 @@ class File(CodeGen):
                         ]),
                     '}',
                     Conditional(self.opt, '', self.opt.width is None, [
-                        'cfg->msb_mask = (crc_t)1u << (cfg->width - 1);',
+                        f'cfg->msb_mask = ({self.sym.crc_t})1u << (cfg->width - 1);',
                         'cfg->crc_mask = (cfg->msb_mask - 1) | cfg->msb_mask;',
                         'cfg->crc_shift = cfg->width < 8 ? 8 - cfg->width : 0;',
                         ]),

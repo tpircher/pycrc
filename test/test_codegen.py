@@ -70,6 +70,9 @@ class TestCodeGen:
         compile_and_run_variable_width('bbf', 'c99')
         compile_and_run_variable_width('tbl', 'c99')
 
+    def test_incomplete_model_reflected_init(self):
+        compile_and_run_incomplete_reflected_init()
+
 
 def run_cmd(cmd):
     LOGGER.info(' '.join(cmd))
@@ -132,6 +135,32 @@ def compile_and_run_special_cases():
         compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=8'], [], 'special', 0x01)
         compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=4'], [], 'special', 0x01)
         compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=2'], [], 'special', 0x01)
+
+
+def compile_and_run_incomplete_reflected_init():
+    """
+    Regression test for the table-driven init function.
+
+    When the model is only partially defined, the generated crc_init() must
+    still reflect xor_in if reflect_in is set. The existing incomplete-model
+    tests are based on crc-32, whose xor_in is palindromic, so they cannot
+    detect a missing reflection. Use a non-palindromic xor_in instead.
+    """
+    model = CrcModels().get_params('crc-32')
+    model['xor_in'] = 0x12345678
+    model['xor_out'] = 0x0
+    reference = Crc(width=model['width'], poly=model['poly'],
+                    reflect_in=model['reflect_in'], xor_in=model['xor_in'],
+                    reflect_out=model['reflect_out'], xor_out=model['xor_out'])
+    check = reference.bit_by_bit_fast('123456789')
+    with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
+        for erased in (('width',), ('xor_in',)):
+            m = dict(model)
+            for param in erased:
+                del m[param]
+            args = args_from_model(m) + ['--algorithm', 'tbl', '--std', 'c99']
+            run_args = args_from_model({param: model[param] for param in erased})
+            compile_and_run(tmpdir, args, run_args, 'incomplete_reflect_init', check)
 
 
 def compile_and_run_variable_width(algo, cstd):

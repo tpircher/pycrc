@@ -18,6 +18,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- Fix table-driven init for partially defined models
+
 
 ## [v0.11.0] - 2025-08-19
 

@@ -1153,7 +1153,7 @@ def _crc_init_function_gen(opt, sym):
                             ]),
                         '}',
                         ], [
-                            Conditional2(opt, '', opt.algorithm == opt.reflect_in, [
+                            Conditional2(opt, '', opt.reflect_in, [
                                 f'return {sym.crc_reflect_function}({sym.cfg_xor_in} & {sym.cfg_mask}, {sym.cfg_width});',
                                 ], [
                                     f'return {sym.cfg_xor_in} & {sym.cfg_mask};',

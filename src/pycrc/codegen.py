@@ -1120,7 +1120,7 @@ def _crc_init_function_gen(opt, sym):
             CodeGen(opt, 4*' ', [
                 Conditional(opt, '', opt.algorithm == opt.algo_bit_by_bit, [
                     'unsigned int i;',
-                    f'{sym.c_bool} bit;'
+                    f'{sym.c_bool} bit;',
                     f'{sym.crc_t} crc = {sym.cfg_xor_in};',
                     f'for (i = 0; i < {sym.cfg_width}; i++) ' + '{',
                     CodeGen(opt, 4*' ', [

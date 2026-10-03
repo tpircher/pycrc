@@ -20,6 +20,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fix table-driven init for partially defined models
 - Use the configured symbol prefix in the generated code
+- Fix unsound simplification of the expression 0 - x
+- Fix `tbl_width` when reverting the table index width
+- Use 32-bit functions to manipulate 32-bit values
+- Fix the generated --table-idx-width option
 
 
 ## [v0.11.0] - 2025-08-19
@@ -56,7 +60,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - The xor-in value is never reflected
-  Thanks to Ralf Schlatterbeck 
+  Thanks to Ralf Schlatterbeck
 
 
 ## [v0.9.3] - 2022-11-01

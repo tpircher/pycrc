@@ -226,10 +226,10 @@ class File(CodeGen):
                         'crc = {0}({1});'.format(self.sym.crc_init_function, '' if _use_constant_crc_init(self.sym) else '&cfg'),
                         'while ((data_len = read_data(data, MAX_DATA_LEN)) > 0) {',
                         CodeGen(self.opt, 4*' ', [
-                            'crc = {0}({1}crc, data, data_len);'.format(self.sym.crc_update_function, '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
+                            'crc = {0}({1}crc, data, data_len);'.format(self.sym.crc_update_function, '' if _crc_update_without_cfg(self.opt) else '&cfg, '),
                             ]),
                         '}',
-                        'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
+                        'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _crc_finalize_without_cfg(self.opt) else '&cfg, '),
                         '\\endcode',
                         ]),
                     ]),
@@ -352,7 +352,7 @@ class File(CodeGen):
                     'Update the crc value with new data.',
                     '',
                     '\\param[in] crc      The current crc value.',
-                    Conditional(self.opt, '', not _use_cfg_in_crc_update(self.opt), [
+                    Conditional(self.opt, '', not _crc_update_without_cfg(self.opt), [
                         f'\\param[in] cfg      A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
                     '\\param[in] data     Pointer to a buffer of \\a data_len bytes.',
@@ -364,7 +364,7 @@ class File(CodeGen):
                 Comment(self.opt, '', [
                     'Calculate the final crc value.',
                     '',
-                    Conditional(self.opt, '', not _use_cfg_in_finalize(self.opt), [
+                    Conditional(self.opt, '', not _crc_finalize_without_cfg(self.opt), [
                         f'\\param[in] cfg  A pointer to an initialised {self.sym.cfg_t} structure.',
                         ]),
                     '\\param[in] crc  The current crc value.',
@@ -537,8 +537,8 @@ class File(CodeGen):
                         f'{self.sym.crc_table_gen_function}(&cfg);',
                         ]),
                     'crc = {0}({1});'.format(self.sym.crc_init_function, '' if _use_constant_crc_init(self.sym) else '&cfg'),
-                    'crc = {0}({1}crc, (void *)str, strlen(str));'.format(self.sym.crc_update_function, '' if _use_cfg_in_crc_update(self.opt) else '&cfg, '),
-                    'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _use_cfg_in_finalize(self.opt) else '&cfg, '),
+                    'crc = {0}({1}crc, (void *)str, strlen(str));'.format(self.sym.crc_update_function, '' if _crc_update_without_cfg(self.opt) else '&cfg, '),
+                    'crc = {0}({1}crc);'.format(self.sym.crc_finalize_function, '' if _crc_finalize_without_cfg(self.opt) else '&cfg, '),
                     '',
                     'if (verbose) {',
                     CodeGen(self.opt, 4*' ', [
@@ -894,9 +894,10 @@ def _crc_init_function_def(opt, sym):
         return f'{sym.crc_t} {sym.crc_init_function}(const {sym.cfg_t} *cfg)'
 
 
-def _use_cfg_in_crc_update(opt):
+def _crc_update_without_cfg(opt):
     """
-    Return True if the update function uses the cfg_t parameter.
+    Return True if the update function can be generated without the cfg_t
+    parameter, because all required parameters are compile-time constants.
     """
     if opt.algorithm in set([opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast]):
         if opt.width is not None and opt.poly is not None and opt.reflect_in is not None:
@@ -911,15 +912,16 @@ def _crc_update_function_def(opt, sym):
     """
     The definition of the update function.
     """
-    if _use_cfg_in_crc_update(opt):
+    if _crc_update_without_cfg(opt):
         return f'{sym.crc_t} {sym.crc_update_function}({sym.crc_t} crc, const void *data, size_t data_len)'
     else:
         return f'{sym.crc_t} {sym.crc_update_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc, const void *data, size_t data_len)'
 
 
-def _use_cfg_in_finalize(opt):
+def _crc_finalize_without_cfg(opt):
     """
-    Return True if the cfg_t parameter is used in the finalize function.
+    Return True if the finalize function can be generated without the cfg_t
+    parameter, because all required parameters are compile-time constants.
     """
     if opt.algorithm == opt.algo_bit_by_bit:
         if opt.width is not None and opt.poly is not None and opt.reflect_out is not None and opt.xor_out is not None:
@@ -958,7 +960,7 @@ def _crc_finalize_function_def(opt, sym):
     """
     The definition of the finalize function.
     """
-    if _use_cfg_in_finalize(opt):
+    if _crc_finalize_without_cfg(opt):
         return f'{sym.crc_t} {sym.crc_finalize_function}({sym.crc_t} crc)'
     else:
         return f'{sym.crc_t} {sym.crc_finalize_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc)'

@@ -383,7 +383,7 @@ of the following parameters:
                 self.__warning("reverting to Table Index Width = 8 "
                                "for internal CRC calculation")
                 self.tbl_idx_width = 8
-                self.tbl_width = 1 << options.table_idx_width
+                self.tbl_width = 1 << self.tbl_idx_width
         if op_count == 0:
             self.action = self.action_check_str
         if op_count > 1:

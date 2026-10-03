@@ -39,7 +39,6 @@ It supports the following CRC algorithms:
     -  table-driven     the standard table driven algorithm
 """
 
-from __future__ import print_function
 from pycrc import __version__
 from pycrc.opt import Options
 from pycrc.algorithms import Crc

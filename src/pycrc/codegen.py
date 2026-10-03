@@ -42,14 +42,14 @@ class CodeGen(object):
     """
     The symbol table class.
     """
-    def __init__(self, opt, indent, content=[]):
+    def __init__(self, opt, indent, content=None):
         """
         The class constructor.
         """
         self.opt = opt
         self.sym = pycrc.symtable.SymbolTable(opt)
         self.indent = indent
-        self.content = content
+        self.content = content if content is not None else []
 
     def gen(self, indent=''):
         """
@@ -182,7 +182,6 @@ class File(CodeGen):
                         f'before the first call to {self.sym.crc_update_function}().',
                         f'Similarly, the {self.sym.crc_finalize_function}() function must be called after the last call',
                         f'to {self.sym.crc_update_function}(), before the \\c crc is being used.',
-                        'is being used.',
                         '',
                         f'The {self.sym.crc_update_function}() function can be called any number of times (including zero',
                         f'times) in between the {self.sym.crc_init_function}() and {self.sym.crc_finalize_function}() calls.',

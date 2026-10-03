@@ -676,7 +676,7 @@ class File(CodeGen):
                         '{"verbose",         0, 0, \'v\'},',
                         '{"check-string",    1, 0, \'s\'},',
                         Conditional(self.opt, '', self.opt.width is None, [
-                            '{"table-idx-with",  1, 0, \'t\'},',
+                            '{"table-idx-width", 1, 0, \'t\'},',
                             ]),
                         '{0, 0, 0, 0}',
                         ]),
@@ -686,7 +686,7 @@ class File(CodeGen):
                     CodeGen(self.opt, 4*' ', [
                         'option_index = 0;',
                         '',
-                        'c = getopt_long(argc, argv, "w:p:n:i:u:o:s:vt", long_options, &option_index);',
+                        'c = getopt_long(argc, argv, "w:p:n:i:u:o:s:vt:", long_options, &option_index);',
                         'if (c == -1)',
                         CodeGen(self.opt, 4*' ', [
                             'break;',

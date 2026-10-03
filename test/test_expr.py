@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from src.pycrc import expr
+from pycrc import expr
 
 
 def test_sub_simplify():

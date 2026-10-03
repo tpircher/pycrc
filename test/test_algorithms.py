@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import logging
-from src.pycrc.models import CrcModels
-from src.pycrc.algorithms import Crc
+from pycrc.models import CrcModels
+from pycrc.algorithms import Crc
 
 LOGGER = logging.getLogger(__name__)
 

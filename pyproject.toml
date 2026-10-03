@@ -77,7 +77,7 @@ select = ["E4", "E7", "E9", "F"]
 
 [tool.coverage.run]
 branch = true
-source = ["src/pycrc"]
+source = ["pycrc"]
 
 [tool.coverage.report]
 show_missing = true

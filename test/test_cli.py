@@ -3,7 +3,7 @@
 import logging
 import tempfile
 import subprocess
-from src.pycrc.models import CrcModels
+from pycrc.models import CrcModels
 
 LOGGER = logging.getLogger(__name__)
 

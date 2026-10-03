@@ -70,14 +70,14 @@ populate() {
     models=`PYTHONPATH=.. python3 -c 'import src.pycrc.models as m; print(" ".join(m.CrcModels().names()))'`
     for model in "undefined" $models; do
         for algo in "bbb" "bbf" "tbl"; do
-            for cstd in c98 c99; do
+            for cstd in c89 c99; do
                 if [ "$model" = "undefined" ]; then
                     mod_opt=
                 else
                     mod_opt="--model=${model}"
                 fi
-                generate "${outdir}/${model}_${algo}_${cstd}.h" --generate=h --algorithm=${algo} $mod_opt
-                generate "${outdir}/${model}_${algo}_${cstd}.c" --generate=c --algorithm=${algo} $mod_opt
+                generate "${outdir}/${model}_${algo}_${cstd}.h" --generate=h --algorithm=${algo} --std=${cstd} $mod_opt
+                generate "${outdir}/${model}_${algo}_${cstd}.c" --generate=c --algorithm=${algo} --std=${cstd} $mod_opt
             done
         done
     done
@@ -85,10 +85,10 @@ populate() {
     algo=tbl
     for model in crc-32; do
         for slice in 4 8 16; do
-            for cstd in c98 c99; do
-                generate "${outdir}/${model}_${algo}_sb${slice}_${cstd}.h" --generate=h --algorithm=${algo} --model=${model} --slice-by ${slice}
-                generate "${outdir}/${model}_${algo}_sb${slice}_${cstd}.c" --generate=c --algorithm=${algo} --model=${model} --slice-by ${slice}
-            done
+            # --slice-by is only supported for C99
+            cstd=c99
+            generate "${outdir}/${model}_${algo}_sb${slice}_${cstd}.h" --generate=h --algorithm=${algo} --model=${model} --slice-by ${slice} --std=${cstd}
+            generate "${outdir}/${model}_${algo}_sb${slice}_${cstd}.c" --generate=c --algorithm=${algo} --model=${model} --slice-by ${slice} --std=${cstd}
         done
     done
 }

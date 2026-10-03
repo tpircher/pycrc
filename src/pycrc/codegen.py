@@ -1534,7 +1534,7 @@ def _crc_table_slice_by_algorithm(opt, sym):
                 CodeGen(opt, None, [
                     '#if __BYTE_ORDER == __BIG_ENDIAN',
                     ]),
-                f'{sym.crc_t} d1 = *d32++ ^ le16toh(crc);',
+                f'{sym.crc_t} d1 = *d32++ ^ le32toh(crc);',
                 Conditional(opt, '', opt.slice_by >= 8, [
                     f'{sym.crc_t} d2 = *d32++;',
                     ]),

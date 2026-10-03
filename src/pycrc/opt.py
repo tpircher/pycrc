@@ -31,8 +31,7 @@ use as follows:
    opt.parse(sys.argv[1:])
 """
 
-from optparse import OptionParser, Option, OptionValueError
-from copy import copy
+import argparse
 import sys
 from pycrc.models import CrcModels
 
@@ -93,17 +92,17 @@ class Options(object):
         """
         # pylint: disable=too-many-branches, too-many-statements
 
-        usage = """python %prog [OPTIONS]
+        usage = """python %(prog)s [OPTIONS]
 
 To calculate the checksum of a string or hexadecimal data:
-    python %prog [model] --check-string "123456789"
-    python %prog [model] --check-hexstring "313233343536373839"
+    python %(prog)s [model] --check-string "123456789"
+    python %(prog)s [model] --check-hexstring "313233343536373839"
 
 To calculate the checksum of a file:
-    python %prog [model] --check-file filename
+    python %(prog)s [model] --check-file filename
 
 To generate the C source code and write it to filename:
-    python %prog [model] --generate c -o filename
+    python %(prog)s [model] --generate c -o filename
 
 The model can be defined either with the --model switch or by specifying each
 of the following parameters:
@@ -111,115 +110,118 @@ of the following parameters:
 
         models = CrcModels()
         model_list = ", ".join(models.names())
-        parser = OptionParser(option_class=MyOption, usage=usage, version=self.version_str)
-        parser.add_option(
+        parser = argparse.ArgumentParser(prog=self.program_name, usage=usage)
+        parser.add_argument(
                 "-v", "--verbose",
-                action="store_true", dest="verbose", default=False,
+                action="store_true", default=False,
                 help="be more verbose; print the value of the parameters "
                 "and the chosen model to stdout")
-        parser.add_option(
+        parser.add_argument(
                 "--check-string",
-                action="store", type="string", dest="check_string",
+                dest="check_string",
                 help="calculate the checksum of a string (default: '123456789')",
                 metavar="STRING")
-        parser.add_option(
+        parser.add_argument(
                 "--check-hexstring",
-                action="store", type="string", dest="check_hexstring",
+                dest="check_hexstring",
                 help="calculate the checksum of a hexadecimal number string",
                 metavar="STRING")
-        parser.add_option(
+        parser.add_argument(
                 "--check-file",
-                action="store", type="string", dest="check_file",
+                dest="check_file",
                 help="calculate the checksum of a file",
                 metavar="FILE")
-        parser.add_option(
+        parser.add_argument(
                 "--generate",
-                action="store", type="string", dest="generate", default=None,
+                dest="generate", default=None,
                 help="generate C source code; choose the type from {h, c, c-main, table}",
                 metavar="CODE")
-        parser.add_option(
+        parser.add_argument(
                 "--std",
-                action="store", type="string", dest="c_std", default="C99",
+                dest="c_std", default="C99",
                 help="choose the C dialect of the generated code from {C89, ANSI, C99}",
                 metavar="STD")
-        parser.add_option(
+        parser.add_argument(
                 "--algorithm",
-                action="store", type="string", dest="algorithm", default="all",
+                dest="algorithm", default="all",
                 help="choose an algorithm from "
                 "{bit-by-bit, bbb, bit-by-bit-fast, bbf, table-driven, tbl, all}",
                 metavar="ALGO")
-        parser.add_option(
+        parser.add_argument(
                 "--model",
-                action="callback", callback=_model_cb, type="string", dest="model", default=None,
+                action=_ModelAction, dest="model", default=None,
                 help=f"choose a parameter set from {{{model_list}}}",
                 metavar="MODEL")
-        parser.add_option(
+        parser.add_argument(
                 "--width",
-                action="store", type="hex", dest="width",
+                type=_hex_type, dest="width",
                 help="use NUM bits in the polynomial",
                 metavar="NUM")
-        parser.add_option(
+        parser.add_argument(
                 "--poly",
-                action="store", type="hex", dest="poly",
+                type=_hex_type, dest="poly",
                 help="use HEX as polynomial",
                 metavar="HEX")
-        parser.add_option(
+        parser.add_argument(
                 "--reflect-in",
-                action="store", type="bool", dest="reflect_in",
+                type=_bool_type, dest="reflect_in",
                 help="reflect the octets in the input message",
                 metavar="BOOL")
-        parser.add_option(
+        parser.add_argument(
                 "--xor-in",
-                action="store", type="hex", dest="xor_in",
+                type=_hex_type, dest="xor_in",
                 help="use HEX as initial value",
                 metavar="HEX")
-        parser.add_option(
+        parser.add_argument(
                 "--reflect-out",
-                action="store", type="bool", dest="reflect_out",
+                type=_bool_type, dest="reflect_out",
                 help="reflect the resulting checksum before applying the --xor-out value",
                 metavar="BOOL")
-        parser.add_option(
+        parser.add_argument(
                 "--xor-out",
-                action="store", type="hex", dest="xor_out",
+                type=_hex_type, dest="xor_out",
                 help="xor the final CRC value with HEX",
                 metavar="HEX")
-        parser.add_option(
+        parser.add_argument(
                 "--slice-by",
-                action="store", type="int", dest="slice_by",
+                type=int, dest="slice_by",
                 help="read NUM bytes at a time from the input. NUM must be one of the values {4, 8, 16}",
                 metavar="NUM")
-        parser.add_option(
+        parser.add_argument(
                 "--table-idx-width",
-                action="store", type="int", dest="table_idx_width",
+                type=int, dest="table_idx_width",
                 help="use NUM bits to index the CRC table; NUM must be one of the values {1, 2, 4, 8}",
                 metavar="NUM")
-        parser.add_option(
+        parser.add_argument(
                 "--force-poly",
-                action="store_true", dest="force_poly", default=False,
+                action="store_true", default=False,
                 help="override any errors about possibly unsuitable polynoms")
-        parser.add_option(
+        parser.add_argument(
                 "--symbol-prefix",
-                action="store", type="string", dest="symbol_prefix",
+                dest="symbol_prefix",
                 help="when generating source code, use STRING as prefix to the exported C symbols",
                 metavar="STRING")
-        parser.add_option(
+        parser.add_argument(
                 "--crc-type",
-                action="store", type="string", dest="crc_type",
+                dest="crc_type",
                 help="when generating source code, use STRING as crc_t type",
                 metavar="STRING")
-        parser.add_option(
+        parser.add_argument(
                 "--include-file",
-                action="append", type="string", dest="include_files",
+                action="append", dest="include_files",
                 help="when generating source code, include also FILE as header file; "
                 "can be specified multiple times",
                 metavar="FILE")
-        parser.add_option(
+        parser.add_argument(
                 "-o", "--output",
-                action="store", type="string", dest="output_file",
+                dest="output_file",
                 help="write the generated code to file instead to stdout",
                 metavar="FILE")
+        parser.add_argument(
+                "--version",
+                action="version", version=self.version_str)
 
-        options, args = parser.parse_args(argv)
+        options, args = parser.parse_known_args(argv)
 
         if options.c_std is not None:
             std = options.c_std.upper()
@@ -413,61 +415,42 @@ of the following parameters:
         sys.exit(1)
 
 
-def _model_cb(option, opt_str, value, parser):
+class _ModelAction(argparse.Action):
     """
-    This function sets up the single parameters if the 'model' option has been selected
-    by the user.
+    Set the individual model parameters when the --model option is given.
     """
-    model_name = value.lower()
-    models = CrcModels()
-    model = models.get_params(model_name)
-    if model is not None:
-        setattr(parser.values, 'width', model['width'])
-        setattr(parser.values, 'poly', model['poly'])
-        setattr(parser.values, 'reflect_in', model['reflect_in'])
-        setattr(parser.values, 'xor_in', model['xor_in'])
-        setattr(parser.values, 'reflect_out', model['reflect_out'])
-        setattr(parser.values, 'xor_out', model['xor_out'])
-    else:
+    def __call__(self, parser, namespace, values, option_string=None):
         models = CrcModels()
-        model_list = ", ".join(models.names())
-        raise OptionValueError(f"unsupported model {value}. Supported models are: {model_list}.")
+        model = models.get_params(values.lower())
+        if model is None:
+            model_list = ", ".join(models.names())
+            raise argparse.ArgumentError(
+                self, f"unsupported model {values}. Supported models are: {model_list}.")
+        for key in ("width", "poly", "reflect_in", "xor_in", "reflect_out", "xor_out"):
+            setattr(namespace, key, model[key])
+        setattr(namespace, self.dest, values)
 
 
-def _check_hex(dummy_option, opt, value):
+def _hex_type(value):
     """
-    Checks if a value is given in a decimal integer of hexadecimal reppresentation.
-    Returns the converted value or rises an exception on error.
+    Convert a decimal or hexadecimal integer string to an integer.
     """
     try:
         if value.lower().startswith("0x"):
             return int(value, 16)
-        else:
-            return int(value)
+        return int(value)
     except ValueError:
-        raise OptionValueError(f"option {opt}: invalid integer or hexadecimal value: {value}.")
+        raise argparse.ArgumentTypeError(f"invalid integer or hexadecimal value: {value}.")
 
 
-def _check_bool(dummy_option, opt, value):
+def _bool_type(value):
     """
-    Checks if a value is given as a boolean value (either 0 or 1 or "true" or "false")
-    Returns the converted value or rises an exception on error.
+    Convert 0/1, "true" or "false" to a boolean value.
     """
     if value.isdigit():
         return int(value, 10) != 0
-    elif value.lower() == "false":
+    if value.lower() == "false":
         return False
-    elif value.lower() == "true":
+    if value.lower() == "true":
         return True
-    else:
-        raise OptionValueError(f"option {opt}: invalid boolean value: {value}.")
-
-
-class MyOption(Option):
-    """
-    New option parsing class extends the Option class
-    """
-    TYPES = Option.TYPES + ("hex", "bool")
-    TYPE_CHECKER = copy(Option.TYPE_CHECKER)
-    TYPE_CHECKER["hex"] = _check_hex
-    TYPE_CHECKER["bool"] = _check_bool
+    raise argparse.ArgumentTypeError(f"invalid boolean value: {value}.")

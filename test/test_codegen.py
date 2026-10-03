@@ -60,7 +60,7 @@ class TestCodeGen:
         params = ['width', 'poly', 'xor_in', 'reflect_in', 'xor_out', 'reflect_out']
         for n in range(len(params)):
             for c in itertools.combinations(params, n):
-                compile_and_test_incomplete_models('tbl', 'c99', c)
+                compile_and_test_incomplete_models('c99', c)
 
     def test_special_cases(self):
         compile_and_run_special_cases()
@@ -105,7 +105,7 @@ def compile_and_run(tmpdir, compile_args, run_args, name, check):
     run_and_check_res([binary] + run_args, check)
 
 
-def compile_and_test_models(algo, cstd, opt_args=[]):
+def compile_and_test_models(algo, cstd, opt_args=()):
     with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
         for m in CrcModels().models:
             # Don't test width > 32 for C89, as I don't know how to ask for an data type > 32 bits.
@@ -117,7 +117,7 @@ def compile_and_test_models(algo, cstd, opt_args=[]):
             compile_and_run(tmpdir, args, [], m['name'], m['check'])
 
 
-def compile_and_test_incomplete_models(algo, cstd, erase_params=[]):
+def compile_and_test_incomplete_models(cstd, erase_params=()):
     if cstd == 'c89':
         pytest.skip('C89 not supported')
     model = CrcModels().get_params('crc-32')

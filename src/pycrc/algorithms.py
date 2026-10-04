@@ -173,7 +173,7 @@ class Crc():
             reg &= self.mask
         if self.reflect_out:
             reg = self.reflect(reg, self.width)
-        return reg ^ self.xor_out
+        return (reg ^ self.xor_out) & self.mask
 
     def gen_table(self):
         """
@@ -229,4 +229,4 @@ class Crc():
 
         if self.reflect_out:
             reg = self.reflect(reg, self.width)
-        return reg ^ self.xor_out
+        return (reg ^ self.xor_out) & self.mask

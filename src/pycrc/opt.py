@@ -86,11 +86,10 @@ class Options(object):
         self.c_std = None
         self.undefined_crc_parameters = False
 
-    def parse(self, argv=None):     # noqa: C901
+    def parse(self, argv=None):
         """
         Parses and validates the options given as arguments
         """
-        # pylint: disable=too-many-branches, too-many-statements
 
         usage = """python %(prog)s [OPTIONS]
 
@@ -223,6 +222,21 @@ of the following parameters:
 
         options, args = parser.parse_known_args(argv)
 
+        self._parse_c_std(options)
+        undefined_params = self._parse_model_params(options)
+        self._parse_table_idx_width(options)
+        self._validate_bits(options)
+
+        self._parse_slice_by(options)
+        self._parse_algorithm(options)
+        self._parse_output_options(options)
+        self._resolve_action(options)
+        self._validate_action(options, args, undefined_params)
+
+    def _parse_c_std(self, options):
+        """
+        Validate and store the requested C standard.
+        """
         if options.c_std is not None:
             std = options.c_std.upper()
             if std == "ANSI" or std == "C89":
@@ -232,6 +246,11 @@ of the following parameters:
             else:
                 self.__error(f"unknown C standard {options.c_std}")
 
+    def _parse_model_params(self, options):
+        """
+        Store the individual CRC model parameters and return the list of the
+        parameters that were not supplied.
+        """
         undefined_params = []
         if options.width is not None:
             self.width = options.width
@@ -257,7 +276,12 @@ of the following parameters:
             self.xor_out = options.xor_out
         else:
             undefined_params.append("--xor-out")
+        return undefined_params
 
+    def _parse_table_idx_width(self, options):
+        """
+        Validate and store the table index width.
+        """
         if options.table_idx_width is not None:
             if options.table_idx_width in set((1, 2, 4, 8)):
                 self.tbl_idx_width = options.table_idx_width
@@ -265,6 +289,10 @@ of the following parameters:
             else:
                 self.__error(f"unsupported table-idx-width {options.table_idx_width}")
 
+    def _validate_bits(self, options):
+        """
+        Validate the width and polynomial and derive the bit masks.
+        """
         if self.poly is not None and self.poly % 2 == 0 and not options.force_poly:
             self.__error("even polinomials are not allowed by default. Use --force-poly to override this.")
 
@@ -285,16 +313,15 @@ of the following parameters:
             self.msb_mask = None
             self.mask = None
 
-        if self.width is None or \
-                self.poly is None or \
-                self.reflect_in is None or \
-                self.xor_in is None or \
-                self.reflect_out is None or \
-                self.xor_out is None:
-            self.undefined_crc_parameters = True
-        else:
-            self.undefined_crc_parameters = False
+        self.undefined_crc_parameters = not (
+            self.width is not None and self.poly is not None and
+            self.reflect_in is not None and self.xor_in is not None and
+            self.reflect_out is not None and self.xor_out is not None)
 
+    def _parse_slice_by(self, options):
+        """
+        Validate and store the --slice-by value.
+        """
         if options.slice_by is not None:
             if options.slice_by in set((4, 8, 16)):
                 self.slice_by = options.slice_by
@@ -319,6 +346,10 @@ of the following parameters:
             if self.c_std == "C89":
                 self.__error("--slice-by not supported for C89")
 
+    def _parse_algorithm(self, options):
+        """
+        Validate and store the selected algorithm(s).
+        """
         if options.algorithm is not None:
             alg = options.algorithm.lower()
             if alg in set(["bit-by-bit", "bbb", "all"]):
@@ -330,6 +361,10 @@ of the following parameters:
             if self.algorithm == 0:
                 self.__error(f"unknown algorithm {options.algorithm}")
 
+    def _parse_output_options(self, options):
+        """
+        Store the options that affect the generated source code.
+        """
         if options.symbol_prefix is not None:
             self.symbol_prefix = options.symbol_prefix
         if options.include_files is not None:
@@ -338,6 +373,12 @@ of the following parameters:
             self.crc_type = options.crc_type
         if options.output_file is not None:
             self.output_file = options.output_file
+
+    def _resolve_action(self, options):
+        """
+        Determine which action was requested and make sure exactly one was
+        given. Return the number of actions.
+        """
         op_count = 0
         if options.check_string is not None:
             self.action = self.action_check_str
@@ -384,6 +425,20 @@ of the following parameters:
             self.action = self.action_check_str
         if op_count > 1:
             self.__error("too many actions specified")
+        return op_count
+
+    def _validate_action(self, options, args, undefined_params):
+        """
+        Perform the checks that depend on the resolved action.
+        """
+        c_generation_actions = set([
+            self.action_generate_h, self.action_generate_c,
+            self.action_generate_c_main, self.action_generate_table])
+        if self.width is not None and self.width > 64 and self.crc_type is None and \
+                self.action in c_generation_actions:
+            self.__error("width values greater than 64 bits cannot be represented "
+                         "by the type of the generated C code; use --crc-type to "
+                         "supply a wider integer type")
 
         if len(args) != 0:
             self.__error("unrecognized argument(s): {0:s}".format(" ".join(args)))

@@ -27,6 +27,8 @@ jobs:
         run: ruff check .
       - name: Test with pytest
         run: pytest --cov=pycrc --cov-report=term-missing
+        env:
+          COVERAGE_PROCESS_START: ${{ github.workspace }}/pyproject.toml
 
   build:
     name: Build distribution

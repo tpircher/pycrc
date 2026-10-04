@@ -99,8 +99,14 @@ class SymbolTable:
         self.crc_update_function = self._opt.symbol_prefix + 'update'
         self.crc_finalize_function = self._opt.symbol_prefix + 'finalize'
 
-        self.crc_init_value = _get_init_value(self._opt)
+        self._crc_init_value = None
         self._crc_table_init = None
+
+    @property
+    def crc_init_value(self):
+        if self._crc_init_value is None:
+            self._crc_init_value = _get_init_value(self._opt)
+        return self._crc_init_value
 
     @property
     def crc_table_init(self):

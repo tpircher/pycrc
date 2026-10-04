@@ -40,7 +40,6 @@ class Options(object):
     """
     The options parsing and validating class.
     """
-    # pylint: disable=too-many-instance-attributes, too-few-public-methods
 
     # Bitmap of the algorithms
     algo_none = 0x00

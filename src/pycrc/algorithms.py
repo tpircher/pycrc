@@ -50,7 +50,6 @@ class Crc():
     """
     A base class for CRC routines.
     """
-    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, width, poly, reflect_in, xor_in, reflect_out, xor_out,
                  table_idx_width=None, slice_by=1):
@@ -65,7 +64,6 @@ class Crc():
             reflect_out
             xor_out
         """
-        # pylint: disable=too-many-arguments
 
         self.width = width
         self.poly = poly
@@ -111,7 +109,6 @@ class Crc():
         """
         reflect a data word, i.e. reverts the bit order.
         """
-        # pylint: disable=no-self-use
 
         res = data & 0x01
         for dummy_i in range(width - 1):
@@ -218,7 +215,6 @@ class Crc():
         """
         The Standard table_driven CRC algorithm.
         """
-        # pylint: disable = line-too-long
 
         # If the input data is a string, convert to bytes.
         if isinstance(in_data, str):

@@ -25,8 +25,8 @@
 """This is a simple wrapper/executable for the pycrc library."""
 
 import sys
-from pycrc.main import main
 
+from pycrc.main import main
 
 if __name__ == "__main__":
     sys.exit(main())

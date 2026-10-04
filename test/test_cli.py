@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
-import tempfile
 import subprocess
+import tempfile
+
 from pycrc.models import CrcModels
 
 LOGGER = logging.getLogger(__name__)

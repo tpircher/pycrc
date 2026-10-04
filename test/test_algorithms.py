@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
+
 import pytest
-from pycrc.models import CrcModels
+
 from pycrc.algorithms import Crc
+from pycrc.models import CrcModels
 
 LOGGER = logging.getLogger(__name__)
 

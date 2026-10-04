@@ -34,11 +34,11 @@ use as follows:
         ]))
 """
 
-import pycrc.symtable
 import pycrc.expr as expr
+import pycrc.symtable
 
 
-class CodeGen(object):
+class CodeGen:
     """
     The symbol table class.
     """
@@ -82,7 +82,7 @@ class Conditional(CodeGen):
         """
         The class constructor.
         """
-        super(Conditional, self).__init__(opt, indent)
+        super().__init__(opt, indent)
         if condition:
             self.content = content
 
@@ -95,7 +95,7 @@ class Conditional2(CodeGen):
         """
         The class constructor.
         """
-        super(Conditional2, self).__init__(opt, indent)
+        super().__init__(opt, indent)
         if condition:
             self.content = content_true
         else:
@@ -110,7 +110,7 @@ class Comment(CodeGen):
         """
         The class constructor.
         """
-        super(Comment, self).__init__(opt, indent)
+        super().__init__(opt, indent)
         self.content = [
                 '/**',
                 CodeGen(opt, indent + ' * ', content),
@@ -126,7 +126,7 @@ class ParamBlock(CodeGen):
         """
         The class constructor.
         """
-        super(ParamBlock, self).__init__(opt, indent)
+        super().__init__(opt, indent)
         self.content = [
                 '- {0:13s} = {1}'.format('Width', self.sym.crc_width),
                 '- {0:13s} = {1}'.format('Poly', self.sym.crc_poly),
@@ -149,7 +149,7 @@ class File(CodeGen):
         """
         The class constructor.
         """
-        super(File, self).__init__(opt, indent)
+        super().__init__(opt, indent)
         self.content = []
 
         if opt.action == opt.action_generate_h:
@@ -261,7 +261,7 @@ class File(CodeGen):
                     'This is not used anywhere in the generated code, but it may be used by the',
                     'application code to call algorithm-specific code, if desired.',
                     ]),
-                '#define {0} 1'.format(_crc_algo_define(self.opt, self.sym)),
+                f'#define {_crc_algo_define(self.opt, self.sym)} 1',
                 '', '',
                 Comment(self.opt, self.indent, [
                     'The type of the CRC values.',
@@ -339,13 +339,13 @@ class File(CodeGen):
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
                         f'#define {self.sym.crc_init_function}()      ({self.sym.crc_init_value})',
                         ], [
-                        'static inline {0}'.format(_crc_init_function_def(self.opt, self.sym)),
+                        f'static inline {_crc_init_function_def(self.opt, self.sym)}',
                         '{',
                         f'    return {self.sym.crc_init_value};',
                         '}',
                         ]),
                     ], [
-                    '{0};'.format(_crc_init_function_def(self.opt, self.sym)),
+                    f'{_crc_init_function_def(self.opt, self.sym)};',
                     ]),
                 '', '',
                 Comment(self.opt, '', [
@@ -359,7 +359,7 @@ class File(CodeGen):
                     '\\param[in] data_len Number of bytes in the \\a data buffer.',
                     '\\return             The updated crc value.',
                     ]),
-                '{0};'.format(_crc_update_function_def(self.opt, self.sym)),
+                f'{_crc_update_function_def(self.opt, self.sym)};',
                 '', '',
                 Comment(self.opt, '', [
                     'Calculate the final crc value.',
@@ -372,15 +372,15 @@ class File(CodeGen):
                     ]),
                 Conditional2(self.opt, '', _use_inline_crc_finalize(self.opt), [
                     Conditional2(self.opt, '', self.opt.c_std == 'C89', [
-                        '#define {0}(crc)      ({1})'.format(self.sym.crc_finalize_function, _crc_final_value(self.opt, self.sym)),
+                        f'#define {self.sym.crc_finalize_function}(crc)      ({_crc_final_value(self.opt, self.sym)})',
                         ], [
-                        'static inline {0}'.format(_crc_finalize_function_def(self.opt, self.sym)),
+                        f'static inline {_crc_finalize_function_def(self.opt, self.sym)}',
                         '{',
-                        '    return {0};'.format(_crc_final_value(self.opt, self.sym)),
+                        f'    return {_crc_final_value(self.opt, self.sym)};',
                         '}',
                         ]),
                     ], [
-                    '{0};'.format(_crc_finalize_function_def(self.opt, self.sym)),
+                    f'{_crc_finalize_function_def(self.opt, self.sym)};',
                     ]),
                 '', '',
                 '#ifdef __cplusplus',
@@ -811,9 +811,9 @@ def _includes(opt):
     if opt.include_files is not None and len(opt.include_files) > 0:
         for include_file in opt.include_files:
             if include_file[0] == '"' or include_file[0] == '<':
-                includes.append('#include {0}'.format(include_file))
+                includes.append(f'#include {include_file}')
             else:
-                includes.append('#include "{0}"'.format(include_file))
+                includes.append(f'#include "{include_file}"')
     return includes
 
 
@@ -869,9 +869,7 @@ def _use_static_reflect_func(opt):
     """
     if opt.algorithm == opt.algo_table_driven:
         return False
-    if opt.reflect_out is not None and opt.algorithm == opt.algo_bit_by_bit_fast:
-        return False
-    return True
+    return not (opt.reflect_out is not None and opt.algorithm == opt.algo_bit_by_bit_fast)
 
 
 def _use_crc_table_gen(opt):
@@ -899,13 +897,11 @@ def _crc_update_without_cfg(opt):
     Return True if the update function can be generated without the cfg_t
     parameter, because all required parameters are compile-time constants.
     """
-    if opt.algorithm in set([opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast]):
-        if opt.width is not None and opt.poly is not None and opt.reflect_in is not None:
-            return True
-    if opt.algorithm == opt.algo_table_driven:
-        if opt.width is not None and opt.reflect_in is not None:
-            return True
-    return False
+    return (
+        (opt.algorithm in {opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast} and
+         opt.width is not None and opt.poly is not None and opt.reflect_in is not None) or
+        (opt.algorithm == opt.algo_table_driven and
+         opt.width is not None and opt.reflect_in is not None))
 
 
 def _crc_update_function_def(opt, sym):
@@ -923,37 +919,31 @@ def _crc_finalize_without_cfg(opt):
     Return True if the finalize function can be generated without the cfg_t
     parameter, because all required parameters are compile-time constants.
     """
-    if opt.algorithm == opt.algo_bit_by_bit:
-        if opt.width is not None and opt.poly is not None and opt.reflect_out is not None and opt.xor_out is not None:
-            return True
-    if opt.algorithm == opt.algo_bit_by_bit_fast:
-        if opt.width is not None and opt.reflect_out is not None and opt.xor_out is not None:
-            return True
-    if opt.algorithm == opt.algo_table_driven:
-        if opt.width is not None and opt.reflect_in is not None and opt.reflect_out is not None and opt.xor_out is not None:
-            return True
-    return False
+    return (
+        (opt.algorithm == opt.algo_bit_by_bit and
+         opt.width is not None and opt.poly is not None and
+         opt.reflect_out is not None and opt.xor_out is not None) or
+        (opt.algorithm == opt.algo_bit_by_bit_fast and
+         opt.width is not None and opt.reflect_out is not None and opt.xor_out is not None) or
+        (opt.algorithm == opt.algo_table_driven and
+         opt.width is not None and opt.reflect_in is not None and
+         opt.reflect_out is not None and opt.xor_out is not None))
 
 
 def _use_inline_crc_finalize(opt):
     """
     Return True if the finalize function can be inlined.
     """
-    if opt.algorithm in set([opt.algo_bit_by_bit_fast, opt.algo_table_driven]) and \
-            (opt.width is not None and opt.reflect_in is not None and opt.reflect_out is not None and opt.xor_out is not None):
-        return True
-    else:
-        return False
+    return (opt.algorithm in {opt.algo_bit_by_bit_fast, opt.algo_table_driven} and
+            opt.width is not None and opt.reflect_in is not None and
+            opt.reflect_out is not None and opt.xor_out is not None)
 
 
 def _use_constant_crc_table(opt):
     """
     Return True is the CRC table is constant.
     """
-    if opt.width is not None and opt.poly is not None and opt.reflect_in is not None:
-        return True
-    else:
-        return False
+    return opt.width is not None and opt.poly is not None and opt.reflect_in is not None
 
 
 def _crc_finalize_function_def(opt, sym):
@@ -1041,7 +1031,7 @@ def _crc_table_gen(opt, sym):
                                 'crc = i;',
                                 ]),
                         ]),
-                    'crc <<= {0};'.format(expr.Parenthesis(expr.Add(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width), sym.cfg_shift)).simplify()),
+                    f'crc <<= {expr.Parenthesis(expr.Add(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width), sym.cfg_shift)).simplify()};',
                     f'for (j = 0; j < {sym.cfg_table_idx_width}; j++) ' + '{',
                     CodeGen(opt, 4*' ', [
                         f'if (crc & {sym.cfg_msb_mask_shifted}) ' + '{',
@@ -1254,7 +1244,7 @@ def _crc_update_function_gen(opt, sym):
                             'for (i = 0x80; i > 0; i >>= 1) {',
                             ]),
                         CodeGen(opt, 4*' ', [
-                            'bit = ({0}) ^ ({1});'.format(expr.And('crc', sym.cfg_msb_mask).simplify(), '(c & i) ? {0} : 0'.format(sym.cfg_msb_mask)),
+                            'bit = ({0}) ^ ({1});'.format(expr.And('crc', sym.cfg_msb_mask).simplify(), f'(c & i) ? {sym.cfg_msb_mask} : 0'),
                             'crc <<= 1;',
                             'if (bit) {',
                             CodeGen(opt, 4*' ', [
@@ -1335,7 +1325,7 @@ def _crc_finalize_function_gen(opt, sym):
             _crc_finalize_function_def(opt, sym),
             '{',
             ]
-    if opt.algorithm in set([opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast]):
+    if opt.algorithm in {opt.algo_bit_by_bit, opt.algo_bit_by_bit_fast}:
         out += [
                 Conditional(opt, 4*' ', opt.algorithm == opt.algo_bit_by_bit, [
                     'unsigned int i;',
@@ -1439,10 +1429,7 @@ def _crc_table_core_algorithm_reflected(opt, sym):
         crc_xor_expr = f'(crc >> {sym.cfg_table_idx_width})'
 
     if opt.tbl_idx_width == 8:
-        if opt.slice_by > 1:
-            crc_lookup = 'crc_table[0][tbl_idx]'
-        else:
-            crc_lookup = 'crc_table[tbl_idx]'
+        crc_lookup = 'crc_table[0][tbl_idx]' if opt.slice_by > 1 else 'crc_table[tbl_idx]'
         crc_exp = expr.And(expr.Parenthesis(expr.Xor(crc_lookup, expr.Parenthesis(expr.Shr('crc', sym.cfg_table_idx_width)))), sym.cfg_mask).simplify()
         out += [
                 Conditional2(opt, '', opt.width is None or opt.width > 8, [
@@ -1458,7 +1445,7 @@ def _crc_table_core_algorithm_reflected(opt, sym):
             idx = expr.Xor('crc', expr.Parenthesis(expr.Shr('*d', expr.Parenthesis(expr.Mul(i, sym.cfg_table_idx_width))))).simplify()
             out += [
                 f'tbl_idx = {idx};',
-                'crc = {0};'.format(expr.Xor(crc_lookup, crc_xor_expr).simplify())
+                f'crc = {expr.Xor(crc_lookup, crc_xor_expr).simplify()};'
                 ]
     return CodeGen(opt, '', out)
 
@@ -1486,10 +1473,7 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
         crc_xor_expr = f'(crc << {sym.cfg_table_idx_width})'
 
     if opt.tbl_idx_width == 8:
-        if opt.slice_by > 1:
-            crc_lookup = 'crc_table[0][tbl_idx]'
-        else:
-            crc_lookup = 'crc_table[tbl_idx]'
+        crc_lookup = 'crc_table[0][tbl_idx]' if opt.slice_by > 1 else 'crc_table[tbl_idx]'
         out += [
                 Conditional2(opt, '', opt.width is None or opt.width > 8, [
                     'tbl_idx = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_shifted_right, '*d')),
@@ -1497,15 +1481,15 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
                     ], [
                     'tbl_idx = {0};'.format(expr.Xor(crc_shifted_right, '*d').simplify())
                     ]),
-                'crc = {0};'.format(expr.And(expr.Parenthesis(expr.Xor(crc_lookup, crc_xor_expr)), sym.cfg_mask).simplify())
+                f'crc = {expr.And(expr.Parenthesis(expr.Xor(crc_lookup, crc_xor_expr)), sym.cfg_mask).simplify()};'
                 ]
     else:
         crc_lookup = f'crc_table[tbl_idx & {sym.crc_table_mask}]'
         for i in range(8 // opt.tbl_idx_width):
-            str_idx = '{0:d}'.format(8 - (i + 1) * opt.tbl_idx_width)
+            str_idx = f'{8 - (i + 1) * opt.tbl_idx_width:d}'
             out += [
                     'tbl_idx = {0};'.format(expr.Xor(crc_shifted_right, expr.Parenthesis(expr.Shr('*d', str_idx)))),
-                    'crc = {0};'.format(expr.Xor(crc_lookup, crc_xor_expr).simplify()),
+                    f'crc = {expr.Xor(crc_lookup, crc_xor_expr).simplify()};',
                     ]
     return CodeGen(opt, '', out)
 
@@ -1513,7 +1497,7 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
 def _crc_table_slice_by_algorithm(opt, sym):
     update_be = []
     for i in range(opt.slice_by // 4):
-        vard = 'd{0}'.format(opt.slice_by // 4 - i)
+        vard = f'd{opt.slice_by // 4 - i}'
         for j in range(4):
             idx1 = i * 4 + j
             idx2 = expr.And(expr.Parenthesis(expr.Shr(vard, j*8)), expr.Terminal(255, '0xffu')).simplify()
@@ -1521,7 +1505,7 @@ def _crc_table_slice_by_algorithm(opt, sym):
 
     update_le = []
     for i in range(opt.slice_by // 4):
-        vard = 'd{0}'.format(opt.slice_by // 4 - i)
+        vard = f'd{opt.slice_by // 4 - i}'
         for j in range(4):
             idx1 = i * 4 + j
             idx2 = expr.And(expr.Parenthesis(expr.Shr(vard, 24 - j*8)), expr.Terminal(255, '0xffu')).simplify()

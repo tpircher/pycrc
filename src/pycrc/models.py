@@ -44,7 +44,7 @@ To print the parameters of a particular model:
 """
 
 
-class CrcModels():
+class CrcModels:
     """
     CRC Models.
 

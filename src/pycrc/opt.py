@@ -33,10 +33,11 @@ use as follows:
 
 import argparse
 import sys
+
 from pycrc.models import CrcModels
 
 
-class Options(object):
+class Options:
     """
     The options parsing and validating class.
     """
@@ -282,7 +283,7 @@ of the following parameters:
         Validate and store the table index width.
         """
         if options.table_idx_width is not None:
-            if options.table_idx_width in set((1, 2, 4, 8)):
+            if options.table_idx_width in {1, 2, 4, 8}:
                 self.tbl_idx_width = options.table_idx_width
                 self.tbl_width = 1 << options.table_idx_width
             else:
@@ -322,7 +323,7 @@ of the following parameters:
         Validate and store the --slice-by value.
         """
         if options.slice_by is not None:
-            if options.slice_by in set((4, 8, 16)):
+            if options.slice_by in {4, 8, 16}:
                 self.slice_by = options.slice_by
             else:
                 self.__error(f"unsupported slice-by {options.slice_by}")
@@ -351,11 +352,11 @@ of the following parameters:
         """
         if options.algorithm is not None:
             alg = options.algorithm.lower()
-            if alg in set(["bit-by-bit", "bbb", "all"]):
+            if alg in {"bit-by-bit", "bbb", "all"}:
                 self.algorithm |= self.algo_bit_by_bit
-            if alg in set(["bit-by-bit-fast", "bbf", "all"]):
+            if alg in {"bit-by-bit-fast", "bbf", "all"}:
                 self.algorithm |= self.algo_bit_by_bit_fast
-            if alg in set(["table-driven", "tbl", "all"]):
+            if alg in {"table-driven", "tbl", "all"}:
                 self.algorithm |= self.algo_table_driven
             if self.algorithm == 0:
                 self.__error(f"unknown algorithm {options.algorithm}")
@@ -410,8 +411,8 @@ of the following parameters:
                     self.__error("the --generate table option is incompatible "
                                  "with the --algorithm option")
                 self.algorithm = self.algo_table_driven
-            elif self.algorithm not in set(
-                    [self.algo_bit_by_bit, self.algo_bit_by_bit_fast, self.algo_table_driven]):
+            elif self.algorithm not in {
+                    self.algo_bit_by_bit, self.algo_bit_by_bit_fast, self.algo_table_driven}:
                 self.__error("select an algorithm to be used in the generated file. "
                              "(Hint: use the --algorithm option.)")
         else:
@@ -430,9 +431,9 @@ of the following parameters:
         """
         Perform the checks that depend on the resolved action.
         """
-        c_generation_actions = set([
+        c_generation_actions = {
             self.action_generate_h, self.action_generate_c,
-            self.action_generate_c_main, self.action_generate_table])
+            self.action_generate_c_main, self.action_generate_table}
         if self.width is not None and self.width > 64 and self.crc_type is None and \
                 self.action in c_generation_actions:
             self.__error("width values greater than 64 bits cannot be represented "
@@ -487,8 +488,8 @@ def _hex_type(value):
         if value.lower().startswith("0x"):
             return int(value, 16)
         return int(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"invalid integer or hexadecimal value: {value}.")
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"invalid integer or hexadecimal value: {value}.") from exc
 
 
 def _bool_type(value):

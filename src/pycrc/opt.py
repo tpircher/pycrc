@@ -305,13 +305,7 @@ of the following parameters:
             if self.tbl_idx_width != 8:
                 self.__error("slice-by is only implemented for table-idx-width=8")
             # FIXME tp: Fix corner cases and disable the following tests
-            if self.width < 8:
-                self.__warning(f"disabling slice-by for width {self.width}")
-                self.slice_by = 1
-            if self.width < 16:
-                self.__warning(f"disabling slice-by for width {self.width}")
-                self.slice_by = 1
-            if self.width > 32:
+            if self.width < 16 or self.width > 32:
                 self.__warning(f"disabling slice-by for width {self.width}")
                 self.slice_by = 1
             if not self.reflect_in:

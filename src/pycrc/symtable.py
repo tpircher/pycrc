@@ -176,6 +176,8 @@ def _pretty_hdrprotection(opt):
     else:
         filename = os.path.basename(opt.output_file)
     out_str = ''.join([s.upper() if s.isalnum() else '_' for s in filename])
+    if out_str and out_str[0].isdigit():
+        out_str = '_' + out_str
     return out_str
 
 

@@ -213,6 +213,10 @@ class Crc():
         if isinstance(in_data, str):
             in_data = bytearray(in_data, 'utf-8')
 
+        if self.tbl_idx_width != 8:
+            raise ValueError(
+                "table_driven() only supports a table index width of 8 bits")
+
         if not self.reflect_in:
             reg = self.direct_init << self.crc_shift
             for octet in in_data:

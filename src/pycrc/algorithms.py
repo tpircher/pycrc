@@ -149,17 +149,19 @@ class Crc():
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-    def bit_by_bit_fast(self, in_data):
+    def bit_by_bit_fast_update(self, reg, in_data):
         """
-        This is a slightly modified version of the bit-by-bit algorithm: it
-        does not need to loop over the augmented bits, i.e. the Width 0-bits
-        wich are appended to the input message in the bit-by-bit algorithm.
+        Update a CRC register with the bit-by-bit-fast algorithm and return
+        the new register value.
+
+        This is the incremental core of bit_by_bit_fast(): it does not apply
+        the initial value, the output reflection or the final xor-out value, so
+        it can be used to process data in chunks.
         """
         # If the input data is a string, convert to bytes.
         if isinstance(in_data, str):
             in_data = bytearray(in_data, 'utf-8')
 
-        reg = self.direct_init
         for octet in in_data:
             if self.reflect_in:
                 octet = self.reflect(octet, 8)
@@ -171,6 +173,15 @@ class Crc():
                 if topbit:
                     reg ^= self.poly
             reg &= self.mask
+        return reg
+
+    def bit_by_bit_fast(self, in_data):
+        """
+        This is a slightly modified version of the bit-by-bit algorithm: it
+        does not need to loop over the augmented bits, i.e. the Width 0-bits
+        wich are appended to the input message in the bit-by-bit algorithm.
+        """
+        reg = self.bit_by_bit_fast_update(self.direct_init, in_data)
         if self.reflect_out:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask

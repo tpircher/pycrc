@@ -314,6 +314,10 @@ class CrcModels():
         'check':         0x995dc9bbdf1939fa,
         })
 
+    # Make the collection immutable so that callers cannot accidentally add
+    # or remove model definitions. Individual dicts are copied by get_params().
+    models = tuple(models)
+
     def names(self):
         """
         This function returns the list of supported CRC models.

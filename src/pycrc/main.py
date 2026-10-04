@@ -183,9 +183,8 @@ def write_file(filename, out_str):
     Write the content of out_str to filename.
     """
     try:
-        out_file = open(filename, "w")
-        out_file.write(out_str)
-        out_file.close()
+        with open(filename, "w") as out_file:
+            out_file.write(out_str)
     except IOError:
         sys.stderr.write("{0:s}: error: cannot write to file {1:s}\n".format(progname, filename))
         sys.exit(1)

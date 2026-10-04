@@ -39,12 +39,13 @@ It supports the following CRC algorithms:
     -  table-driven     the standard table driven algorithm
 """
 
-from pycrc import __version__
-from pycrc.opt import Options
-from pycrc.algorithms import Crc
-import pycrc.codegen as cg
 import binascii
 import sys
+
+import pycrc.codegen as cg
+from pycrc import __version__
+from pycrc.algorithms import Crc
+from pycrc.opt import Options
 
 progname = "pycrc"
 url = 'https://pycrc.org'
@@ -105,7 +106,7 @@ def check_hexstring(opt):
     Return the calculated CRC sum of a hex string.
     """
     if opt.undefined_crc_parameters:
-        sys.stderr.write("{0:s}: error: undefined parameters\n".format(progname))
+        sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
     hex_string = opt.check_string
     if len(hex_string) % 2 != 0:
@@ -114,7 +115,7 @@ def check_hexstring(opt):
         check_str = bytearray(binascii.unhexlify(bytes(hex_string, 'utf_8')))
     except (binascii.Error, ValueError):
         sys.stderr.write(
-            "{0:s}: error: invalid hex string {1:s}\n".format(progname, opt.check_string))
+            f"{progname:s}: error: invalid hex string {opt.check_string:s}\n")
         sys.exit(1)
 
     opt.check_string = check_str
@@ -127,7 +128,7 @@ def check_file(opt):
     This algorithm uses the bit-by-bit-fast CRC algorithm.
     """
     if opt.undefined_crc_parameters:
-        sys.stderr.write("{0:s}: error: undefined parameters\n".format(progname))
+        sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
     alg = Crc(
         width=opt.width, poly=opt.poly,
@@ -145,9 +146,9 @@ def check_file(opt):
             while check_bytes != b"":
                 register = alg.bit_by_bit_fast_update(register, check_bytes)
                 check_bytes = bytearray(f.read(4096))
-    except IOError:
+    except OSError:
         sys.stderr.write(
-            "{0:s}: error: can't open file {1:s}\n".format(progname, opt.check_file))
+            f"{progname:s}: error: can't open file {opt.check_file:s}\n")
         sys.exit(1)
 
     if opt.reflect_out:
@@ -163,8 +164,8 @@ def write_file(filename, out_str):
     try:
         with open(filename, "w") as out_file:
             out_file.write(out_str)
-    except IOError:
-        sys.stderr.write("{0:s}: error: cannot write to file {1:s}\n".format(progname, filename))
+    except OSError:
+        sys.stderr.write(f"{progname:s}: error: cannot write to file {filename:s}\n")
         sys.exit(1)
 
 
@@ -178,16 +179,16 @@ def main():
         print(print_parameters(opt))
     if opt.action == opt.action_check_str:
         crc = check_string(opt)
-        print("{0:#x}".format(crc))
+        print(f"{crc:#x}")
     if opt.action == opt.action_check_hex_str:
         crc = check_hexstring(opt)
-        print("{0:#x}".format(crc))
+        print(f"{crc:#x}")
     if opt.action == opt.action_check_file:
         crc = check_file(opt)
-        print("{0:#x}".format(crc))
-    if opt.action in set([
+        print(f"{crc:#x}")
+    if opt.action in {
             opt.action_generate_h, opt.action_generate_c, opt.action_generate_c_main,
-            opt.action_generate_table]):
+            opt.action_generate_table}:
         out = str(cg.File(opt, ''))
         if opt.output_file is None:
             print(out)

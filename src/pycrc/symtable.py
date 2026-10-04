@@ -35,9 +35,10 @@ use as follows:
     print(f'width: {sym.crc_width}, poly: {sym.crc_poly}')
 """
 
-from pycrc.algorithms import Crc
-import time
 import os
+import time
+
+from pycrc.algorithms import Crc
 
 
 class SymbolTable:
@@ -131,9 +132,9 @@ def _pretty_hex(value, width=None):
     if value is None:
         return 'Undefined'
     if width is None:
-        return '{0:#x}'.format(value)
+        return f'{value:#x}'
     width = (width + 3) // 4
-    hex_str = "{{0:#0{0:d}x}}".format(width + 2)
+    hex_str = f"{{0:#0{width + 2:d}x}}"
     return hex_str.format(value)
 
 
@@ -194,10 +195,7 @@ def _pretty_hdrprotection(opt):
     """
     Return the name of a C header protection (e.g. CRC_IMPLEMENTATION_H).
     """
-    if opt.output_file is None:
-        filename = 'pycrc_stdout'
-    else:
-        filename = os.path.basename(opt.output_file)
+    filename = 'pycrc_stdout' if opt.output_file is None else os.path.basename(opt.output_file)
     out_str = ''.join([s.upper() if s.isalnum() else '_' for s in filename])
     if out_str and out_str[0].isdigit():
         out_str = '_' + out_str
@@ -258,19 +256,13 @@ def _get_init_value(opt):
     elif opt.algorithm == opt.algo_table_driven:
         if opt.reflect_in is None or opt.xor_in is None or opt.width is None:
             return None
-        if opt.poly is None:
-            poly = 0
-        else:
-            poly = opt.poly
+        poly = 0 if opt.poly is None else opt.poly
         crc = Crc(
             width=opt.width, poly=poly,
             reflect_in=opt.reflect_in, xor_in=opt.xor_in,
             reflect_out=opt.reflect_out, xor_out=opt.xor_out,
             table_idx_width=opt.tbl_idx_width)
-        if opt.reflect_in:
-            init = crc.reflect(crc.direct_init, opt.width)
-        else:
-            init = crc.direct_init
+        init = crc.reflect(crc.direct_init, opt.width) if opt.reflect_in else crc.direct_init
     else:
         init = 0
     return _pretty_hex(init, opt.width)
@@ -287,11 +279,11 @@ def _get_simple_table(opt, crc_tbl, values_per_line, format_width, indent):
             out += " " * indent
         tbl_val = _pretty_hex(crc_tbl[i], format_width)
         if i == (opt.tbl_width - 1):
-            out += "{0:s}".format(tbl_val)
+            out += f"{tbl_val:s}"
         elif i % values_per_line == (values_per_line - 1):
-            out += "{0:s},\n".format(tbl_val)
+            out += f"{tbl_val:s},\n"
         else:
-            out += "{0:s}, ".format(tbl_val)
+            out += f"{tbl_val:s}, "
     return out
 
 
@@ -317,18 +309,15 @@ def _get_table_init(opt):       # TODO: change to return a list
     else:
         values_per_line = 16
     format_width = max(opt.width, 8)
-    if opt.slice_by == 1:
-        indent = 4
-    else:
-        indent = 8
+    indent = 4 if opt.slice_by == 1 else 8
 
     out = [''] * opt.slice_by
     for i in range(opt.slice_by):
         out[i] = _get_simple_table(opt, crc_tbl[i], values_per_line, format_width, indent)
     fixed_indent = ' ' * (indent - 4)
-    out = '{0:s}{{\n'.format(fixed_indent) + \
-        '\n{0:s}}},\n{0:s}{{\n'.format(fixed_indent).join(out) + \
-        '\n{0:s}}}'.format(fixed_indent)
+    out = f'{fixed_indent:s}{{\n' + \
+        f'\n{fixed_indent:s}}},\n{fixed_indent:s}{{\n'.join(out) + \
+        f'\n{fixed_indent:s}}}'
     if opt.slice_by == 1:
         return out
     return '{\n' + out + '\n}'

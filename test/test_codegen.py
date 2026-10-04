@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
+import itertools
 import logging
 import os
-import tempfile
 import subprocess
-import itertools
+import tempfile
+
 import pytest
-from pycrc.models import CrcModels
+
 from pycrc.algorithms import Crc
+from pycrc.models import CrcModels
 
 LOGGER = logging.getLogger(__name__)
 

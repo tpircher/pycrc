@@ -22,9 +22,9 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 
-from pycrc.main import main
 import sys
 
+from pycrc.main import main
 
 if __name__ == "__main__":
     sys.exit(main())

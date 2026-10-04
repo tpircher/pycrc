@@ -46,7 +46,7 @@ def _classify(val):
     return val
 
 
-class Expression():
+class Expression:
     """
     Base class for all expressions.
     """

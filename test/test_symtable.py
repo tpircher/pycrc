@@ -2,8 +2,8 @@
 
 """Unit tests for the code generation symbol table helpers."""
 
-from pycrc.opt import Options
 from pycrc import symtable
+from pycrc.opt import Options
 
 
 def _opt(**kwargs):

@@ -46,7 +46,7 @@ This is an example use of the different algorithms:
 """
 
 
-class Crc():
+class Crc:
     """
     A base class for CRC routines.
     """
@@ -96,7 +96,7 @@ class Crc():
         return the non-direct init if the direct algorithm has been selected.
         """
         crc = init
-        for dummy_i in range(self.width):
+        for _ in range(self.width):
             bit = crc & 0x01
             if bit:
                 crc ^= self.poly
@@ -111,7 +111,7 @@ class Crc():
         """
 
         res = data & 0x01
-        for dummy_i in range(width - 1):
+        for _ in range(width - 1):
             data >>= 1
             res = (res << 1) | (data & 0x01)
         return res
@@ -136,7 +136,7 @@ class Crc():
                 if topbit:
                     reg ^= self.poly
 
-        for i in range(self.width):
+        for _ in range(self.width):
             topbit = reg & self.msb_mask
             reg = ((reg << 1) & self.mask)
             if topbit:
@@ -197,11 +197,10 @@ class Crc():
             if self.reflect_in:
                 reg = self.reflect(reg, self.tbl_idx_width)
             reg = reg << (self.width - self.tbl_idx_width + self.crc_shift)
-            for dummy_j in range(self.tbl_idx_width):
-                if reg & (self.msb_mask << self.crc_shift) != 0:
-                    reg = (reg << 1) ^ (self.poly << self.crc_shift)
-                else:
-                    reg = (reg << 1)
+            for _ in range(self.tbl_idx_width):
+                reg = ((reg << 1) ^ (self.poly << self.crc_shift)
+                       if reg & (self.msb_mask << self.crc_shift) != 0
+                       else (reg << 1))
             if self.reflect_in:
                 reg = self.reflect(reg >> self.crc_shift, self.width) << self.crc_shift
             tbl[0][i] = (reg >> self.crc_shift) & self.mask

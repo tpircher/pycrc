@@ -79,6 +79,10 @@ ignore = ["UP030"]
 [tool.coverage.run]
 branch = true
 source = ["pycrc"]
+# Subprocesses (the generated-code and CLI tests) inherit the coverage
+# configuration through COVERAGE_PROCESS_START, so collect their data too.
+parallel = true
 
 [tool.coverage.report]
 show_missing = true
+fail_under = 80

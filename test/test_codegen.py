@@ -4,6 +4,7 @@ import itertools
 import logging
 import os
 import subprocess
+import sys
 import tempfile
 
 import pytest
@@ -86,7 +87,7 @@ def run_cmd(cmd):
 
 
 def run_pycrc(args):
-    ret = run_cmd(['python3', 'src/pycrc.py'] + args)
+    ret = run_cmd([sys.executable, 'src/pycrc.py'] + args)
     return ret.stdout.decode('utf-8').rstrip()
 
 

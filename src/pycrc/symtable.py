@@ -204,8 +204,7 @@ def _pretty_hdrprotection(opt):
     return out_str
 
 
-def _get_underlying_crc_t(opt):     # noqa: C901
-    # pylint: disable=too-many-return-statements, too-many-branches
+def _get_underlying_crc_t(opt):
     """
     Return the C type of the crc_t typedef.
     """

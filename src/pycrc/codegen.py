@@ -937,7 +937,7 @@ def _crc_finalize_without_cfg(opt):
 
 def _use_inline_crc_finalize(opt):
     """
-    Return True if the init function can be inlined.
+    Return True if the finalize function can be inlined.
     """
     if opt.algorithm in set([opt.algo_bit_by_bit_fast, opt.algo_table_driven]) and \
             (opt.width is not None and opt.reflect_in is not None and opt.reflect_out is not None and opt.xor_out is not None):

@@ -15,15 +15,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Modernize the build environment:
   - Switch build backend to hatchling
   - Switch from flake8 to ruff
+- Check if `SOURCE_DATE_EPOCH` is set, for reproducible builds
 
 ### Fixed
 
-- Fix table-driven init for partially defined models
+- Fix table-driven initialisation for partially defined models
 - Use the configured symbol prefix in the generated code
 - Fix unsound simplification of the expression 0 - x
 - Fix `tbl_width` when reverting the table index width
 - Use 32-bit functions to manipulate 32-bit values
-- Fix the generated --table-idx-width option
+- Fix the generated `--table-idx-width` option
 
 
 ## [v0.11.0] - 2025-08-19

@@ -49,7 +49,7 @@ class SymbolTable:
         self._opt = opt
         self.tbl_shift = _tbl_shift(opt)
 
-        self.datetime = time.asctime()
+        self.datetime = _get_datetime()
         self.program_version = self._opt.version_str
         self.program_url = self._opt.web_address
         self.filename = 'pycrc_stdout' if self._opt.output_file is None else os.path.basename(self._opt.output_file)
@@ -138,6 +138,23 @@ def _pretty_bool(value):
     if value is None:
         return 'Undefined'
     return 'True' if value else 'False'
+
+
+def _get_datetime():
+    """
+    Return the timestamp used in the generated file headers.
+
+    If the SOURCE_DATE_EPOCH environment variable is set, the timestamp is
+    derived from it so that generated files are reproducible. Otherwise the
+    current local time is used.
+    """
+    source_date_epoch = os.environ.get("SOURCE_DATE_EPOCH")
+    if source_date_epoch is not None:
+        try:
+            return time.strftime("%a %b %d %H:%M:%S %Y", time.gmtime(int(source_date_epoch)))
+        except (ValueError, OverflowError):
+            pass
+    return time.asctime()
 
 
 def _pretty_algorithm(opt):

@@ -84,8 +84,6 @@ def check_string(opt):
         error |= crc is not None and bbf_crc != crc
         crc = bbf_crc
     if opt.algorithm & opt.algo_table_driven:
-        # no point making the python implementation slower by using less than 8 bits as index.
-        opt.tbl_idx_width = 8
         tbl_crc = alg.table_driven(opt.check_string)
         error |= crc is not None and tbl_crc != crc
         crc = tbl_crc

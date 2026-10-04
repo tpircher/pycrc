@@ -121,32 +121,10 @@ def check_hexstring(opt):
     return check_string(opt)
 
 
-def crc_file_update(alg, register, check_bytes):
-    """
-    Update the CRC using the bit-by-bit-fast CRC algorithm.
-    """
-    # If the input data is a string, convert to bytes.
-    if isinstance(check_bytes, str):
-        check_bytes = bytearray(check_bytes, 'utf_8')
-
-    for octet in check_bytes:
-        if alg.reflect_in:
-            octet = alg.reflect(octet, 8)
-        for j in range(8):
-            bit = register & alg.msb_mask
-            register <<= 1
-            if octet & (0x80 >> j):
-                bit ^= alg.msb_mask
-            if bit:
-                register ^= alg.poly
-        register &= alg.mask
-    return register
-
-
 def check_file(opt):
     """
     Calculate the CRC of a file.
-    This algorithm uses the table_driven CRC algorithm.
+    This algorithm uses the bit-by-bit-fast CRC algorithm.
     """
     if opt.undefined_crc_parameters:
         sys.stderr.write("{0:s}: error: undefined parameters\n".format(progname))
@@ -165,7 +143,7 @@ def check_file(opt):
         with open(opt.check_file, 'rb') as f:
             check_bytes = bytearray(f.read(4096))
             while check_bytes != b"":
-                register = crc_file_update(alg, register, check_bytes)
+                register = alg.bit_by_bit_fast_update(register, check_bytes)
                 check_bytes = bytearray(f.read(4096))
     except IOError:
         sys.stderr.write(

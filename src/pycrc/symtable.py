@@ -56,7 +56,7 @@ class SymbolTable:
         self.datetime = _get_datetime()
         self.program_version = self._opt.version_str
         self.program_url = self._opt.web_address
-        self.filename = 'pycrc_stdout' if self._opt.output_file is None else os.path.basename(self._opt.output_file)
+        self.filename = "pycrc_stdout" if self._opt.output_file is None else os.path.basename(self._opt.output_file)
         self.header_filename = _pretty_header_filename(self._opt.output_file)
         self.header_protection = _pretty_hdrprotection(self._opt)
 
@@ -75,33 +75,39 @@ class SymbolTable:
         self.crc_msb_mask = _pretty_hex(self._opt.msb_mask, self._opt.width)
         self.crc_shift = _pretty_str(self.tbl_shift)
 
-        self.cfg_width = self.crc_width if self._opt.width is not None else 'cfg->width'
-        self.cfg_poly = self.crc_poly if self._opt.poly is not None else 'cfg->poly'
-        self.cfg_reflect_in = self.crc_reflect_in if self._opt.reflect_in is not None else 'cfg->reflect_in'
-        self.cfg_xor_in = self.crc_xor_in if self._opt.xor_in is not None else 'cfg->xor_in'
-        self.cfg_reflect_out = self.crc_reflect_out if self._opt.reflect_out is not None else 'cfg->reflect_out'
-        self.cfg_xor_out = self.crc_xor_out if self._opt.xor_out is not None else 'cfg->xor_out'
-        self.cfg_table_idx_width = self.crc_table_idx_width if self._opt.tbl_idx_width is not None else 'cfg->table_idx_width'
-        self.cfg_table_width = self.crc_table_width if self._opt.tbl_width is not None else 'cfg->table_width'
-        self.cfg_mask = self.crc_mask if self._opt.mask is not None else 'cfg->crc_mask'
-        self.cfg_msb_mask = self.crc_msb_mask if self._opt.msb_mask is not None else 'cfg->msb_mask'
-        self.cfg_shift = self.crc_shift if self.tbl_shift is not None else 'cfg->crc_shift'
-        self.cfg_poly_shifted = f'({self.cfg_poly} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_poly
-        self.cfg_mask_shifted = f'({self.cfg_mask} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_mask
-        self.cfg_msb_mask_shifted = f'({self.cfg_msb_mask} << {self.cfg_shift})' if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_msb_mask
+        self.cfg_width = self.crc_width if self._opt.width is not None else "cfg->width"
+        self.cfg_poly = self.crc_poly if self._opt.poly is not None else "cfg->poly"
+        self.cfg_reflect_in = self.crc_reflect_in if self._opt.reflect_in is not None else "cfg->reflect_in"
+        self.cfg_xor_in = self.crc_xor_in if self._opt.xor_in is not None else "cfg->xor_in"
+        self.cfg_reflect_out = self.crc_reflect_out if self._opt.reflect_out is not None else "cfg->reflect_out"
+        self.cfg_xor_out = self.crc_xor_out if self._opt.xor_out is not None else "cfg->xor_out"
+        self.cfg_table_idx_width = self.crc_table_idx_width if self._opt.tbl_idx_width is not None else "cfg->table_idx_width"
+        self.cfg_table_width = self.crc_table_width if self._opt.tbl_width is not None else "cfg->table_width"
+        self.cfg_mask = self.crc_mask if self._opt.mask is not None else "cfg->crc_mask"
+        self.cfg_msb_mask = self.crc_msb_mask if self._opt.msb_mask is not None else "cfg->msb_mask"
+        self.cfg_shift = self.crc_shift if self.tbl_shift is not None else "cfg->crc_shift"
+        self.cfg_poly_shifted = (
+            f"({self.cfg_poly} << {self.cfg_shift})" if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_poly
+        )
+        self.cfg_mask_shifted = (
+            f"({self.cfg_mask} << {self.cfg_shift})" if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_mask
+        )
+        self.cfg_msb_mask_shifted = (
+            f"({self.cfg_msb_mask} << {self.cfg_shift})" if self.tbl_shift is None or self.tbl_shift > 0 else self.cfg_msb_mask
+        )
 
-        self.c_bool = 'int' if self._opt.c_std == 'C89' else 'bool'
-        self.c_true = '1' if self._opt.c_std == 'C89' else 'true'
-        self.c_false = '0' if self._opt.c_std == 'C89' else 'false'
+        self.c_bool = "int" if self._opt.c_std == "C89" else "bool"
+        self.c_true = "1" if self._opt.c_std == "C89" else "true"
+        self.c_false = "0" if self._opt.c_std == "C89" else "false"
 
         self.underlying_crc_t = _get_underlying_crc_t(self._opt)
-        self.crc_t = self._opt.symbol_prefix + 't'
-        self.cfg_t = self._opt.symbol_prefix + 'cfg_t'
-        self.crc_reflect_function = self._opt.symbol_prefix + 'reflect'
-        self.crc_table_gen_function = self._opt.symbol_prefix + 'table_gen'
-        self.crc_init_function = self._opt.symbol_prefix + 'init'
-        self.crc_update_function = self._opt.symbol_prefix + 'update'
-        self.crc_finalize_function = self._opt.symbol_prefix + 'finalize'
+        self.crc_t = self._opt.symbol_prefix + "t"
+        self.cfg_t = self._opt.symbol_prefix + "cfg_t"
+        self.crc_reflect_function = self._opt.symbol_prefix + "reflect"
+        self.crc_table_gen_function = self._opt.symbol_prefix + "table_gen"
+        self.crc_init_function = self._opt.symbol_prefix + "init"
+        self.crc_update_function = self._opt.symbol_prefix + "update"
+        self.crc_finalize_function = self._opt.symbol_prefix + "finalize"
 
         self._crc_init_value = None
         self._crc_table_init = None
@@ -130,7 +136,7 @@ def _pretty_str(value):
     Return a value of width bits as a pretty string.
     """
     if value is None:
-        return 'Undefined'
+        return "Undefined"
     return str(value)
 
 
@@ -139,9 +145,9 @@ def _pretty_hex(value, width=None):
     Return a value of width bits as a pretty hexadecimal formatted string.
     """
     if value is None:
-        return 'Undefined'
+        return "Undefined"
     if width is None:
-        return f'{value:#x}'
+        return f"{value:#x}"
     width = (width + 3) // 4
     hex_str = f"{{0:#0{width + 2:d}x}}"
     return hex_str.format(value)
@@ -152,8 +158,8 @@ def _pretty_bool(value):
     Return a boolen value of width bits as a pretty formatted string.
     """
     if value is None:
-        return 'Undefined'
-    return 'True' if value else 'False'
+        return "Undefined"
+    return "True" if value else "False"
 
 
 def _get_datetime():
@@ -178,13 +184,13 @@ def _pretty_algorithm(opt):
     Return the algorithm name.
     """
     if opt.algorithm == opt.algo_bit_by_bit:
-        return 'bit-by-bit'
+        return "bit-by-bit"
     elif opt.algorithm == opt.algo_bit_by_bit_fast:
-        return 'bit-by-bit-fast'
+        return "bit-by-bit-fast"
     elif opt.algorithm == opt.algo_table_driven:
-        return 'table-driven'
+        return "table-driven"
     else:
-        return 'UNDEFINED'
+        return "UNDEFINED"
 
 
 def _pretty_header_filename(filename):
@@ -192,22 +198,22 @@ def _pretty_header_filename(filename):
     Return the sanitized filename of a header file.
     """
     if filename is None:
-        return 'pycrc_stdout.h'
+        return "pycrc_stdout.h"
     filename = os.path.basename(filename)
-    if filename[-2:] == '.c':
-        return filename[0:-1] + 'h'
+    if filename[-2:] == ".c":
+        return filename[0:-1] + "h"
     else:
-        return filename + '.h'
+        return filename + ".h"
 
 
 def _pretty_hdrprotection(opt):
     """
     Return the name of a C header protection (e.g. CRC_IMPLEMENTATION_H).
     """
-    filename = 'pycrc_stdout' if opt.output_file is None else os.path.basename(opt.output_file)
-    out_str = ''.join([s.upper() if s.isalnum() else '_' for s in filename])
+    filename = "pycrc_stdout" if opt.output_file is None else os.path.basename(opt.output_file)
+    out_str = "".join([s.upper() if s.isalnum() else "_" for s in filename])
     if out_str and out_str[0].isdigit():
-        out_str = '_' + out_str
+        out_str = "_" + out_str
     return out_str
 
 
@@ -218,28 +224,28 @@ def _get_underlying_crc_t(opt):
 
     if opt.crc_type is not None:
         return opt.crc_type
-    if opt.c_std == 'C89':
+    if opt.c_std == "C89":
         if opt.width is None:
-            return 'unsigned long int'
+            return "unsigned long int"
         if opt.width <= 8:
-            return 'unsigned char'
+            return "unsigned char"
         if opt.width <= 16:
-            return 'unsigned int'
-        return 'unsigned long int'
-    else:   # C99
+            return "unsigned int"
+        return "unsigned long int"
+    else:  # C99
         if opt.width is None:
-            return 'unsigned long long int'
+            return "unsigned long long int"
         if opt.width <= 8:
-            return 'uint_fast8_t'
+            return "uint_fast8_t"
         if opt.width <= 16:
-            return 'uint_fast16_t'
+            return "uint_fast16_t"
         if opt.width <= 32:
-            return 'uint_fast32_t'
+            return "uint_fast32_t"
         if opt.width <= 64:
-            return 'uint_fast64_t'
+            return "uint_fast64_t"
         if opt.width <= 128:
-            return 'uint_fast128_t'
-        return 'uintmax_t'
+            return "uint_fast128_t"
+        return "uintmax_t"
 
 
 def _get_init_value(opt):
@@ -253,10 +259,14 @@ def _get_init_value(opt):
         if opt.xor_in is None or opt.width is None or opt.poly is None:
             return None
         crc = Crc(
-            width=opt.width, poly=opt.poly,
-            reflect_in=opt.reflect_in, xor_in=opt.xor_in,
-            reflect_out=opt.reflect_out, xor_out=opt.xor_out,
-            table_idx_width=opt.tbl_idx_width)
+            width=opt.width,
+            poly=opt.poly,
+            reflect_in=opt.reflect_in,
+            xor_in=opt.xor_in,
+            reflect_out=opt.reflect_out,
+            xor_out=opt.xor_out,
+            table_idx_width=opt.tbl_idx_width,
+        )
         init = crc.nondirect_init
     elif opt.algorithm == opt.algo_bit_by_bit_fast:
         if opt.xor_in is None:
@@ -267,10 +277,14 @@ def _get_init_value(opt):
             return None
         poly = 0 if opt.poly is None else opt.poly
         crc = Crc(
-            width=opt.width, poly=poly,
-            reflect_in=opt.reflect_in, xor_in=opt.xor_in,
-            reflect_out=opt.reflect_out, xor_out=opt.xor_out,
-            table_idx_width=opt.tbl_idx_width)
+            width=opt.width,
+            poly=poly,
+            reflect_in=opt.reflect_in,
+            xor_in=opt.xor_in,
+            reflect_out=opt.reflect_out,
+            xor_out=opt.xor_out,
+            table_idx_width=opt.tbl_idx_width,
+        )
         init = crc.reflect(crc.direct_init, opt.width) if opt.reflect_in else crc.direct_init
     else:
         init = 0
@@ -296,7 +310,7 @@ def _get_simple_table(opt, crc_tbl, values_per_line, format_width, indent):
     return out
 
 
-def _get_table_init(opt):       # TODO: change to return a list
+def _get_table_init(opt):  # TODO: change to return a list
     """
     Return the precalculated CRC table for the table_driven implementation.
     """
@@ -305,11 +319,15 @@ def _get_table_init(opt):       # TODO: change to return a list
     if opt.width is None or opt.poly is None or opt.reflect_in is None:
         return "0"
     crc = Crc(
-        width=opt.width, poly=opt.poly,
+        width=opt.width,
+        poly=opt.poly,
         reflect_in=opt.reflect_in,
-        xor_in=0, reflect_out=False, xor_out=0,     # set unimportant variables to known values
+        xor_in=0,
+        reflect_out=False,
+        xor_out=0,  # set unimportant variables to known values
         table_idx_width=opt.tbl_idx_width,
-        slice_by=opt.slice_by)
+        slice_by=opt.slice_by,
+    )
     crc_tbl = crc.gen_table()
     if opt.width > 32:
         values_per_line = 4
@@ -320,16 +338,14 @@ def _get_table_init(opt):       # TODO: change to return a list
     format_width = max(opt.width, 8)
     indent = 4 if opt.slice_by == 1 else 8
 
-    out = [''] * opt.slice_by
+    out = [""] * opt.slice_by
     for i in range(opt.slice_by):
         out[i] = _get_simple_table(opt, crc_tbl[i], values_per_line, format_width, indent)
-    fixed_indent = ' ' * (indent - 4)
-    out = f'{fixed_indent:s}{{\n' + \
-        f'\n{fixed_indent:s}}},\n{fixed_indent:s}{{\n'.join(out) + \
-        f'\n{fixed_indent:s}}}'
+    fixed_indent = " " * (indent - 4)
+    out = f"{fixed_indent:s}{{\n" + f"\n{fixed_indent:s}}},\n{fixed_indent:s}{{\n".join(out) + f"\n{fixed_indent:s}}}"
     if opt.slice_by == 1:
         return out
-    return '{\n' + out + '\n}'
+    return "{\n" + out + "\n}"
 
 
 def _tbl_shift(opt):

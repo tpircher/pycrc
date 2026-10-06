@@ -41,7 +41,7 @@ def _classify(val):
     if isinstance(val, str):
         if val.isdigit():
             return Terminal(int(val), val)
-        if val[:2].lower() == '0x':
+        if val[:2].lower() == "0x":
             return Terminal(int(val, 16), val)
         return Terminal(val)
     return val
@@ -51,6 +51,7 @@ class Expression:
     """
     Base class for all expressions.
     """
+
     def is_int(self, val=None):
         """Dummy function, always returns False. This is overwritten by derived classes."""
         return False
@@ -60,6 +61,7 @@ class Terminal(Expression):
     """
     A terminal object.
     """
+
     def __init__(self, val, pretty=None):
         """
         Construct a Terminal.
@@ -97,6 +99,7 @@ class FunctionCall(Expression):
     """
     Represent a function call
     """
+
     def __init__(self, name, args):
         """
         Construct a function call object.
@@ -108,7 +111,7 @@ class FunctionCall(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.name) + '(' + ', '.join([str(arg) for arg in self.args]) + ')'
+        return str(self.name) + "(" + ", ".join([str(arg) for arg in self.args]) + ")"
 
     def simplify(self):
         """
@@ -122,6 +125,7 @@ class Parenthesis(Expression):
     """
     Represent a pair of round brackets.
     """
+
     def __init__(self, val):
         """
         Construct a parenthesis object.
@@ -141,13 +145,14 @@ class Parenthesis(Expression):
         """
         Return the string expression of this object.
         """
-        return '(' + str(self.val) + ')'
+        return "(" + str(self.val) + ")"
 
 
 class Add(Expression):
     """
     Represent an addition of operands.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct an addition object.
@@ -173,13 +178,14 @@ class Add(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' + ' + str(self.rhs)
+        return str(self.lhs) + " + " + str(self.rhs)
 
 
 class Sub(Expression):
     """
     Represent a subtraction of operands.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct subtraction object.
@@ -203,13 +209,14 @@ class Sub(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' - ' + str(self.rhs)
+        return str(self.lhs) + " - " + str(self.rhs)
 
 
 class Mul(Expression):
     """
     Represent the multiplication of operands.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a multiplication object.
@@ -237,13 +244,14 @@ class Mul(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' * ' + str(self.rhs)
+        return str(self.lhs) + " * " + str(self.rhs)
 
 
 class Shl(Expression):
     """
     Shift left operation.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a shift left object.
@@ -269,13 +277,14 @@ class Shl(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' << ' + str(self.rhs)
+        return str(self.lhs) + " << " + str(self.rhs)
 
 
 class Shr(Expression):
     """
     Shift right operation.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a shift right object.
@@ -301,13 +310,14 @@ class Shr(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' >> ' + str(self.rhs)
+        return str(self.lhs) + " >> " + str(self.rhs)
 
 
 class Or(Expression):
     """
     Logical or operation.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a logical and object.
@@ -333,13 +343,14 @@ class Or(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' | ' + str(self.rhs)
+        return str(self.lhs) + " | " + str(self.rhs)
 
 
 class And(Expression):
     """
     Logical and operation.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a logical and object.
@@ -363,13 +374,14 @@ class And(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' & ' + str(self.rhs)
+        return str(self.lhs) + " & " + str(self.rhs)
 
 
 class Xor(Expression):
     """
     Logical xor operation.
     """
+
     def __init__(self, lhs, rhs):
         """
         Construct a logical xor object.
@@ -395,4 +407,4 @@ class Xor(Expression):
         """
         Return the string expression of this object.
         """
-        return str(self.lhs) + ' ^ ' + str(self.rhs)
+        return str(self.lhs) + " ^ " + str(self.rhs)

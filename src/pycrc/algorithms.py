@@ -51,8 +51,7 @@ class Crc:
     A base class for CRC routines.
     """
 
-    def __init__(self, width, poly, reflect_in, xor_in, reflect_out, xor_out,
-                 table_idx_width=None, slice_by=1):
+    def __init__(self, width, poly, reflect_in, xor_in, reflect_out, xor_out, table_idx_width=None, slice_by=1):
         """
         Create a CRC object, using the Rocksoft model.
 
@@ -124,7 +123,7 @@ class Crc:
         """
         # If the input data is a string, convert to bytes.
         if isinstance(in_data, str):
-            in_data = bytearray(in_data, 'utf-8')
+            in_data = bytearray(in_data, "utf-8")
 
         reg = self.nondirect_init
         for octet in in_data:
@@ -138,7 +137,7 @@ class Crc:
 
         for _ in range(self.width):
             topbit = reg & self.msb_mask
-            reg = ((reg << 1) & self.mask)
+            reg = (reg << 1) & self.mask
             if topbit:
                 reg ^= self.poly
 
@@ -157,7 +156,7 @@ class Crc:
         """
         # If the input data is a string, convert to bytes.
         if isinstance(in_data, str):
-            in_data = bytearray(in_data, 'utf-8')
+            in_data = bytearray(in_data, "utf-8")
 
         for octet in in_data:
             if self.reflect_in:
@@ -198,16 +197,16 @@ class Crc:
                 reg = self.reflect(reg, self.tbl_idx_width)
             reg = reg << (self.width - self.tbl_idx_width + self.crc_shift)
             for _ in range(self.tbl_idx_width):
-                reg = ((reg << 1) ^ (self.poly << self.crc_shift)
-                       if reg & (self.msb_mask << self.crc_shift) != 0
-                       else (reg << 1))
+                reg = (
+                    (reg << 1) ^ (self.poly << self.crc_shift) if reg & (self.msb_mask << self.crc_shift) != 0 else (reg << 1)
+                )
             if self.reflect_in:
                 reg = self.reflect(reg >> self.crc_shift, self.width) << self.crc_shift
             tbl[0][i] = (reg >> self.crc_shift) & self.mask
 
         for j in range(1, self.slice_by):
             for i in range(table_length):
-                tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xff]
+                tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xFF]
         return tbl
 
     def table_driven(self, in_data):
@@ -217,23 +216,23 @@ class Crc:
 
         # If the input data is a string, convert to bytes.
         if isinstance(in_data, str):
-            in_data = bytearray(in_data, 'utf-8')
+            in_data = bytearray(in_data, "utf-8")
 
         if self.tbl_idx_width != 8:
-            raise ValueError(
-                "table_driven() only supports a table index width of 8 bits")
+            raise ValueError("table_driven() only supports a table index width of 8 bits")
 
         if not self.reflect_in:
             reg = self.direct_init << self.crc_shift
             for octet in in_data:
-                tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xff
-                reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^
-                       (self.tbl[0][tblidx] << self.crc_shift)) & (self.mask << self.crc_shift)
+                tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xFF
+                reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^ (self.tbl[0][tblidx] << self.crc_shift)) & (
+                    self.mask << self.crc_shift
+                )
             reg = reg >> self.crc_shift
         else:
             reg = self.reflect(self.direct_init, self.width)
             for octet in in_data:
-                tblidx = (reg ^ octet) & 0xff
+                tblidx = (reg ^ octet) & 0xFF
                 reg = ((reg >> self.tbl_idx_width) ^ self.tbl[0][tblidx]) & self.mask
             reg = self.reflect(reg, self.width) & self.mask
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Regression tests for the pure Python CRC algorithms."""
+
 import logging
 
 import pytest
@@ -11,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def check_crc(algo, check_str, expected_crc=None):
+    """Check that all three algorithms agree and optionally match expected_crc."""
     res_bbb = algo.bit_by_bit(check_str)
     res_bbf = algo.bit_by_bit_fast(check_str)
     res_tbl = algo.table_driven(check_str)

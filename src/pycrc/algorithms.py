@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2006-2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2006-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -176,7 +176,7 @@ class Crc:
         """
         This is a slightly modified version of the bit-by-bit algorithm: it
         does not need to loop over the augmented bits, i.e. the Width 0-bits
-        wich are appended to the input message in the bit-by-bit algorithm.
+        which are appended to the input message in the bit-by-bit algorithm.
         """
         reg = self.bit_by_bit_fast_update(self.direct_init, in_data)
         if self.reflect_out:

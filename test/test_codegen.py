@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""End-to-end tests that generate, compile and run the C code."""
+
 import itertools
 import logging
 import os
@@ -22,36 +24,45 @@ use_c89 = True
 
 
 class TestCodeGen:
+    """Compile and run the generated code for many option combinations."""
+
     @pytest.mark.skipif(not use_algo_bit_by_bit, reason='bbb tests disabled')
     def test_models_bbb_c99(self):
+        """Compile and run all models with the bit-by-bit algorithm (C99)."""
         compile_and_test_models('bbb', 'c99')
 
     @pytest.mark.skipif(not use_c89, reason='c89 tests disabled')
     @pytest.mark.skipif(not use_algo_bit_by_bit, reason='bbb tests disabled')
     def test_models_bbb_c89(self):
+        """Compile and run all models with the bit-by-bit algorithm (C89)."""
         compile_and_test_models('bbb', 'c89')
 
     @pytest.mark.skipif(not use_algo_bit_by_bit_fast, reason='bbf tests disabled')
     def test_models_bbf_c99(self):
+        """Compile and run all models with the bit-by-bit-fast algorithm (C99)."""
         compile_and_test_models('bbf', 'c99')
 
     @pytest.mark.skipif(not use_c89, reason='c89 tests disabled')
     @pytest.mark.skipif(not use_algo_bit_by_bit_fast, reason='bbf tests disabled')
     def test_models_bbf_c89(self):
+        """Compile and run all models with the bit-by-bit-fast algorithm (C89)."""
         compile_and_test_models('bbf', 'c89')
 
     @pytest.mark.skipif(not use_algo_table_driven, reason='tbl tests disabled')
     def test_models_tbl_c99(self):
+        """Compile and run all models with the table-driven algorithm (C99)."""
         compile_and_test_models('tbl', 'c99')
 
     @pytest.mark.skipif(not use_c89, reason='c89 tests disabled')
     @pytest.mark.skipif(not use_algo_table_driven, reason='tbl tests disabled')
     def test_models_tbl_c89(self):
+        """Compile and run all models with the table-driven algorithm (C89)."""
         compile_and_test_models('tbl', 'c89')
 
     @pytest.mark.skipif(not use_algo_table_driven, reason='tbl tests disabled')
     @pytest.mark.skipif(not use_algo_table_slice, reason='tbl slice tests disabled')
     def test_models_tbl_sb_c99(self):
+        """Compile and run all models with the table-driven slice-by algorithm."""
         compile_and_test_models('tbl', 'c99', ['--slice-by', '4'])
         compile_and_test_models('tbl', 'c99', ['--slice-by', '8'])
         compile_and_test_models('tbl', 'c99', ['--slice-by', '16'])
@@ -60,38 +71,46 @@ class TestCodeGen:
 
     @pytest.mark.skipif(not use_algo_table_driven, reason="tbl tests disabled")
     def test_incomplete_models_tbl_c99(self):
+        """Table-driven generation with every subset of undefined parameters."""
         params = ['width', 'poly', 'xor_in', 'reflect_in', 'xor_out', 'reflect_out']
         for n in range(len(params)):
             for c in itertools.combinations(params, n):
                 compile_and_test_incomplete_models('c99', c)
 
     def test_special_cases(self):
+        """Check table-driven generation with non-default table index widths."""
         compile_and_run_special_cases()
 
     def test_variable_width(self):
+        """Generated code must match the Python reference across widths."""
         compile_and_run_variable_width('bbb', 'c99')
         compile_and_run_variable_width('bbf', 'c99')
         compile_and_run_variable_width('tbl', 'c99')
 
     def test_incomplete_model_reflected_init(self):
+        """Regression test for reflecting a non-palindromic xor_in."""
         compile_and_run_incomplete_reflected_init()
 
     def test_symbol_prefix_incomplete_model(self):
+        """Regression test for --symbol-prefix in the generated code."""
         compile_and_run_symbol_prefix()
 
 
 def run_cmd(cmd):
+    """Run a command, raising on failure, and return the completed process."""
     LOGGER.info(' '.join(cmd))
     ret = subprocess.run(cmd, check=True, capture_output=True)
     return ret
 
 
 def run_pycrc(args):
+    """Run pycrc with the given arguments and return its stripped stdout."""
     ret = run_cmd([sys.executable, 'src/pycrc.py'] + args)
     return ret.stdout.decode('utf-8').rstrip()
 
 
 def gen_src(tmpdir, args, name):
+    """Generate the header and C main file for the given options into tmpdir."""
     src_h = os.path.join(tmpdir, f'{name}.h')
     gen = ['--generate', 'h', '-o', src_h]
     run_pycrc(gen + args)
@@ -102,6 +121,7 @@ def gen_src(tmpdir, args, name):
 
 
 def compile_and_run(tmpdir, compile_args, run_args, name, check):
+    """Generate, compile and run a model and verify the printed checksum."""
     gen_src(tmpdir, compile_args, name)
     binary = os.path.join(tmpdir, 'a.out')
     compile_src(binary, os.path.join(tmpdir, name + '.c'))
@@ -109,9 +129,10 @@ def compile_and_run(tmpdir, compile_args, run_args, name, check):
 
 
 def compile_and_test_models(algo, cstd, opt_args=()):
+    """Compile and run every known model for one algorithm and C standard."""
     with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
         for m in CrcModels().models:
-            # Don't test width > 32 for C89, as I don't know how to ask for an data type > 32 bits.
+            # Don't test width > 32 for C89, as I don't know how to ask for a data type > 32 bits.
             if cstd == 'c89' and m['width'] > 32:
                 continue
             args = args_from_model(m)
@@ -121,6 +142,7 @@ def compile_and_test_models(algo, cstd, opt_args=()):
 
 
 def compile_and_test_incomplete_models(cstd, erase_params=()):
+    """Compile and run crc-32 with the named model parameters left undefined."""
     if cstd == 'c89':
         pytest.skip('C89 not supported')
     model = CrcModels().get_params('crc-32')
@@ -136,6 +158,7 @@ def compile_and_test_incomplete_models(cstd, erase_params=()):
 
 
 def compile_and_run_special_cases():
+    """Check a width-5 model with table index widths 8, 4 and 2."""
     with tempfile.TemporaryDirectory(prefix='pycrc-test.') as tmpdir:
         crc_5_args = ['--model=crc-5', '--reflect-in=0', '--algorithm', 'table-driven']
         compile_and_run(tmpdir, crc_5_args + ['--table-idx-width=8'], [], 'special', 0x01)
@@ -185,6 +208,7 @@ def compile_and_run_symbol_prefix():
 
 
 def compile_and_run_variable_width(algo, cstd):
+    """Compile and run the given algorithm for a range of model widths."""
     check_str = "123456789"
     models = CrcModels()
     m = models.get_params('crc-64-jones')
@@ -215,16 +239,19 @@ def compile_and_run_variable_width(algo, cstd):
 
 
 def run_and_check_res(cmd, expected_crc):
+    """Run a command and assert that its checksum output matches expected_crc."""
     res = run_cmd(cmd).stdout.decode('utf-8').rstrip()
     assert res[:2] == '0x'
     assert int(res, 16) == expected_crc
 
 
 def compile_src(out_file, src_file, cstd='c99'):
+    """Compile a C source file with all warnings treated as errors."""
     run_cmd(['cc', '-W', '-Wall', '-pedantic', '-Werror', f'-std={cstd}', '-o', out_file, src_file])
 
 
 def args_from_model(m):
+    """Return the CLI arguments that describe the given CRC model."""
     args = []
     if 'width' in m:
         args += ['--width', f'{m["width"]:d}']

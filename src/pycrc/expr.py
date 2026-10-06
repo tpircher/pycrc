@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2017-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,8 @@ This modules simplifies an expression.
 
 def _classify(val):
     """
-    Creates a Terminal object if the parameter is a string or an integer.
+    Check if the parameter is a string or a integer value, and return a Terminal object in this case.
+    Otherwise return the parameter itself.
     """
     if isinstance(val, int):
         return Terminal(val)
@@ -51,7 +52,7 @@ class Expression:
     Base class for all expressions.
     """
     def is_int(self, val=None):
-        """Dummy function, always returns False. This is overwritten bu derived classes."""
+        """Dummy function, always returns False. This is overwritten by derived classes."""
         return False
 
 
@@ -71,11 +72,11 @@ class Terminal(Expression):
 
     def __str__(self):
         """
-        Return the string expression of this object.
+        Return the string representation of this object.
         """
-        if self.pretty is None:
-            return str(self.val)
-        return self.pretty
+        if self.pretty is not None:
+            return self.pretty
+        return str(self.val)
 
     def simplify(self):
         """

@@ -7,8 +7,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## UNRELEASED
 
-### Added
-
 ### Changed
 
 - Minimum Python version is 3.10
@@ -16,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Switch build backend to hatchling
   - Switch from flake8 to ruff
 - Check if `SOURCE_DATE_EPOCH` is set, for reproducible builds
+- Replace deprecated optparse with argparse
 
 ### Fixed
 

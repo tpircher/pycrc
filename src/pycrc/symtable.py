@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2006-2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2006-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -47,6 +47,9 @@ class SymbolTable:
     """
 
     def __init__(self, opt):
+        """
+        Create a symbol table for the given options.
+        """
         self._opt = opt
         self.tbl_shift = _tbl_shift(opt)
 
@@ -105,12 +108,18 @@ class SymbolTable:
 
     @property
     def crc_init_value(self):
+        """
+        The initial CRC value, or None if it must be taken from cfg at run time.
+        """
         if self._crc_init_value is None:
             self._crc_init_value = _get_init_value(self._opt)
         return self._crc_init_value
 
     @property
     def crc_table_init(self):
+        """
+        The precalculated CRC table used by the table-driven algorithm.
+        """
         if self._crc_table_init is None:
             self._crc_table_init = _get_table_init(self._opt)
         return self._crc_table_init

@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2006-2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2006-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -31,7 +31,7 @@ To print the parameters of a particular model:
     models = cm.CrcModels()
     print(", ".join(models.names()))
     m = models.get_params("crc-32")
-    if m != None:
+    if m is not None:
         print("Width:        {width:d}".format(**m))
         print("Poly:         {poly:#x}".format(**m))
         print("ReflectIn:    {reflect_in}".format(**m))
@@ -320,13 +320,13 @@ class CrcModels:
 
     def names(self):
         """
-        This function returns the list of supported CRC models.
+        Return the list of supported CRC models.
         """
         return [model['name'] for model in self.models]
 
     def get_params(self, model):
         """
-        This function returns the parameters of a given model.
+        Return the parameters of a given model.
 
         A copy of the model is returned so that callers cannot accidentally
         modify the (constant) model definitions.

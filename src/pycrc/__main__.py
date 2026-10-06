@@ -2,7 +2,7 @@
 
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2006-2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2006-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -21,6 +21,11 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
+
+
+"""
+Command line entry point, allowing pycrc to be run as ``python -m pycrc``.
+"""
 
 import sys
 

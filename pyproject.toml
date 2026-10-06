@@ -9,7 +9,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-  { name = "Thomas Pircher", email = "tehpeh-web@tty1.net" },
+  { name = "Thomas Pircher", email = "thp.oss@p5r.uk" },
 ]
 requires-python = ">=3.10"
 keywords = ["crc", "checksum", "cyclic-redundancy-check", "code-generator", "c"]

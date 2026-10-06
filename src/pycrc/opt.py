@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2006-2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2006-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -57,6 +57,12 @@ class Options:
     action_generate_table = 0x07
 
     def __init__(self, progname='pycrc', version='unknown', url='unknown'):
+        """
+        Create an option container.
+
+        The CRC parameters are initially undefined; call parse() to fill them
+        in from the command line.
+        """
         self.program_name = progname
         self.version = version
         self.version_str = f"{progname} v{version}"
@@ -458,7 +464,7 @@ of the following parameters:
 
     def __error(self, message):
         """
-        Print a error message to stderr and terminate the program.
+        Print an error message to stderr and terminate the program.
         """
         self.__warning(message)
         sys.exit(1)
@@ -469,6 +475,9 @@ class _ModelAction(argparse.Action):
     Set the individual model parameters when the --model option is given.
     """
     def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Set the individual model parameters from the selected model.
+        """
         models = CrcModels()
         model = models.get_params(values.lower())
         if model is None:

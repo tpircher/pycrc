@@ -1,6 +1,6 @@
 #  pycrc -- parameterisable CRC calculation utility and C source code generator
 #
-#  Copyright (c) 2017  Thomas Pircher  <tehpeh-web@tty1.net>
+#  Copyright (c) 2017-2026  Thomas Pircher  <thp.oss@p5r.uk>
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,10 @@ import pycrc.symtable
 
 class CodeGen:
     """
-    The symbol table class.
+    A node in the generated source code tree.
+
+    Subclasses add conditionals, comments and other constructs. The gen()
+    method renders the tree to a list of indented lines.
     """
     def __init__(self, opt, indent, content=None):
         """
@@ -53,7 +56,7 @@ class CodeGen:
 
     def gen(self, indent=''):
         """
-        Return an array of strings.
+        Return an array code lines.
         """
         out = []
         if self.indent is None:
@@ -69,7 +72,7 @@ class CodeGen:
 
     def __str__(self):
         """
-        Stringify the object.
+        Return the generated code as one big string.
         """
         return '\n'.join([i.rstrip() for i in self.gen()])
 
@@ -120,7 +123,7 @@ class Comment(CodeGen):
 
 class ParamBlock(CodeGen):
     """
-    Print the parameters of the model.
+    Render the parameters of the model.
     """
     def __init__(self, opt, indent, algorithm=False):
         """
@@ -143,7 +146,7 @@ class ParamBlock(CodeGen):
 
 class File(CodeGen):
     """
-    Generate the file output.
+    Generate the code for a C/C++ source file (header or implementation).
     """
     def __init__(self, opt, indent):
         """
@@ -238,7 +241,7 @@ class File(CodeGen):
 
     def _header_file(self):
         """
-        Add header content.
+        Generate the content of a header file.
         """
         out = [
                 f'#ifndef {self.sym.header_protection}',
@@ -394,7 +397,7 @@ class File(CodeGen):
 
     def _c_file(self):
         """
-        Add C file content.
+        Generate the content of a C/C++ source file.
         """
         out = [
                 CodeGen(self.opt, '', _includes(self.opt)),
@@ -428,7 +431,7 @@ class File(CodeGen):
 
     def _main_file(self):
         """
-        Add main file content.
+        Generate the content of a main source file.
         """
         out = [
                 '',
@@ -558,7 +561,7 @@ class File(CodeGen):
 
     def _getopt_template(self):
         """
-        Add getopt functions.
+        Add option handler code.
         """
         out = [
                 Conditional(self.opt, '', self.opt.reflect_in is None or self.opt.reflect_out is None, [
@@ -819,7 +822,7 @@ def _includes(opt):
 
 def _crc_algo_define(opt, sym):
     """
-    Get the the identifier for header files.
+    Get the identifier of the algorithm for the header file.
     """
     name = sym.crc_algorithm.upper().replace('-', '_')
     return 'CRC_ALGO_' + name
@@ -941,7 +944,7 @@ def _use_inline_crc_finalize(opt):
 
 def _use_constant_crc_table(opt):
     """
-    Return True is the CRC table is constant.
+    Return True if the CRC table is constant.
     """
     return opt.width is not None and opt.poly is not None and opt.reflect_in is not None
 
@@ -1495,6 +1498,12 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
 
 
 def _crc_table_slice_by_algorithm(opt, sym):
+    """
+    Return the body of the slice-by loop of the table-driven update function.
+
+    The loop consumes opt.slice_by bytes at a time. It is emitted once for
+    big-endian and once for little-endian hosts.
+    """
     update_be = []
     for i in range(opt.slice_by // 4):
         vard = f'd{opt.slice_by // 4 - i}'

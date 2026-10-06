@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+"""Tests for the C expression simplifier."""
+
 from pycrc import expr
 
 
 def test_sub_simplify():
+    """Subtraction must be folded safely, in particular 0 - x."""
     # A subtraction of two integers is folded into a constant.
     assert str(expr.Sub(5, 3).simplify()) == "2"
     # Subtracting zero leaves the operand unchanged.
@@ -13,6 +16,7 @@ def test_sub_simplify():
 
 
 def test_other_simplifications():
+    """The neutral and absorbing elements of the operators must simplify."""
     assert str(expr.Add("x", 0).simplify()) == "x"
     assert str(expr.Mul("x", 0).simplify()) == "0"
     assert str(expr.Mul("x", 1).simplify()) == "x"

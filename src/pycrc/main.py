@@ -48,14 +48,14 @@ from pycrc.algorithms import Crc
 from pycrc.opt import Options
 
 progname = "pycrc"
-url = 'https://pycrc.org'
+url = "https://pycrc.org"
 
 
 def print_parameters(opt):
     """
     Generate a string with the options pretty-printed (used in the --verbose mode).
     """
-    return str(cg.ParamBlock(opt, ''))
+    return str(cg.ParamBlock(opt, ""))
 
 
 def check_string(opt):
@@ -70,10 +70,14 @@ def check_string(opt):
         opt.algorithm = opt.algo_bit_by_bit | opt.algo_bit_by_bit_fast | opt.algo_table_driven
 
     alg = Crc(
-        width=opt.width, poly=opt.poly,
-        reflect_in=opt.reflect_in, xor_in=opt.xor_in,
-        reflect_out=opt.reflect_out, xor_out=opt.xor_out,
-        table_idx_width=opt.tbl_idx_width)
+        width=opt.width,
+        poly=opt.poly,
+        reflect_in=opt.reflect_in,
+        xor_in=opt.xor_in,
+        reflect_out=opt.reflect_out,
+        xor_out=opt.xor_out,
+        table_idx_width=opt.tbl_idx_width,
+    )
 
     crc = None
     if opt.algorithm & opt.algo_bit_by_bit:
@@ -112,10 +116,9 @@ def check_hexstring(opt):
     if len(hex_string) % 2 != 0:
         hex_string = "0" + hex_string
     try:
-        check_str = bytearray(binascii.unhexlify(bytes(hex_string, 'utf_8')))
+        check_str = bytearray(binascii.unhexlify(bytes(hex_string, "utf_8")))
     except (binascii.Error, ValueError):
-        sys.stderr.write(
-            f"{progname:s}: error: invalid hex string {opt.check_string:s}\n")
+        sys.stderr.write(f"{progname:s}: error: invalid hex string {opt.check_string:s}\n")
         sys.exit(1)
 
     opt.check_string = check_str
@@ -131,24 +134,27 @@ def check_file(opt):
         sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
     alg = Crc(
-        width=opt.width, poly=opt.poly,
-        reflect_in=opt.reflect_in, xor_in=opt.xor_in,
-        reflect_out=opt.reflect_out, xor_out=opt.xor_out,
-        table_idx_width=opt.tbl_idx_width)
+        width=opt.width,
+        poly=opt.poly,
+        reflect_in=opt.reflect_in,
+        xor_in=opt.xor_in,
+        reflect_out=opt.reflect_out,
+        xor_out=opt.xor_out,
+        table_idx_width=opt.tbl_idx_width,
+    )
 
     # Always use the xor_in value unreflected
     # As in the rocksoft reference implementation
     register = opt.xor_in
 
     try:
-        with open(opt.check_file, 'rb') as f:
+        with open(opt.check_file, "rb") as f:
             check_bytes = bytearray(f.read(4096))
             while check_bytes != b"":
                 register = alg.bit_by_bit_fast_update(register, check_bytes)
                 check_bytes = bytearray(f.read(4096))
     except OSError:
-        sys.stderr.write(
-            f"{progname:s}: error: can't open file {opt.check_file:s}\n")
+        sys.stderr.write(f"{progname:s}: error: can't open file {opt.check_file:s}\n")
         sys.exit(1)
 
     if opt.reflect_out:
@@ -186,10 +192,8 @@ def main():
     if opt.action == opt.action_check_file:
         crc = check_file(opt)
         print(f"{crc:#x}")
-    if opt.action in {
-            opt.action_generate_h, opt.action_generate_c, opt.action_generate_c_main,
-            opt.action_generate_table}:
-        out = str(cg.File(opt, ''))
+    if opt.action in {opt.action_generate_h, opt.action_generate_c, opt.action_generate_c_main, opt.action_generate_table}:
+        out = str(cg.File(opt, ""))
         if opt.output_file is None:
             print(out)
         else:

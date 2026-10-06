@@ -23,9 +23,9 @@ def test_pretty_str():
 def test_pretty_hex():
     """Hex values are zero-padded to the requested width."""
     assert symtable._pretty_hex(None, 16) == "Undefined"
-    assert symtable._pretty_hex(0x0f, 8) == "0x0f"
+    assert symtable._pretty_hex(0x0F, 8) == "0x0f"
     assert symtable._pretty_hex(0x01, 32) == "0x00000001"
-    assert symtable._pretty_hex(0x2a) == "0x2a"
+    assert symtable._pretty_hex(0x2A) == "0x2a"
 
 
 def test_pretty_bool():

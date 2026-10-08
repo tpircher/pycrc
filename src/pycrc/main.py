@@ -39,6 +39,8 @@ It supports the following CRC algorithms:
     -  table-driven     the standard table driven algorithm
 """
 
+from __future__ import annotations
+
 import binascii
 import sys
 
@@ -51,14 +53,14 @@ progname = "pycrc"
 url = "https://pycrc.org"
 
 
-def print_parameters(opt):
+def print_parameters(opt: Options) -> str:
     """
     Generate a string with the options pretty-printed (used in the --verbose mode).
     """
     return str(cg.ParamBlock(opt, ""))
 
 
-def check_string(opt):
+def check_string(opt: Options) -> int | None:
     """
     Return the calculated CRC sum of a string.
     """
@@ -69,6 +71,12 @@ def check_string(opt):
     if opt.algorithm == 0:
         opt.algorithm = opt.algo_bit_by_bit | opt.algo_bit_by_bit_fast | opt.algo_table_driven
 
+    assert opt.width is not None
+    assert opt.poly is not None
+    assert opt.reflect_in is not None
+    assert opt.xor_in is not None
+    assert opt.reflect_out is not None
+    assert opt.xor_out is not None
     alg = Crc(
         width=opt.width,
         poly=opt.poly,
@@ -79,7 +87,7 @@ def check_string(opt):
         table_idx_width=opt.tbl_idx_width,
     )
 
-    crc = None
+    crc: int | None = None
     if opt.algorithm & opt.algo_bit_by_bit:
         bbb_crc = alg.bit_by_bit(opt.check_string)
         error |= crc is not None and bbb_crc != crc
@@ -105,7 +113,7 @@ def check_string(opt):
     return crc
 
 
-def check_hexstring(opt):
+def check_hexstring(opt: Options) -> int | None:
     """
     Return the calculated CRC sum of a hex string.
     """
@@ -113,19 +121,21 @@ def check_hexstring(opt):
         sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
     hex_string = opt.check_string
+    assert isinstance(hex_string, str)
+    check_input = hex_string
     if len(hex_string) % 2 != 0:
         hex_string = "0" + hex_string
     try:
         check_str = bytearray(binascii.unhexlify(bytes(hex_string, "utf_8")))
     except (binascii.Error, ValueError):
-        sys.stderr.write(f"{progname:s}: error: invalid hex string {opt.check_string:s}\n")
+        sys.stderr.write(f"{progname:s}: error: invalid hex string {check_input:s}\n")
         sys.exit(1)
 
     opt.check_string = check_str
     return check_string(opt)
 
 
-def check_file(opt):
+def check_file(opt: Options) -> int:
     """
     Calculate the CRC of a file.
     This algorithm uses the bit-by-bit-fast CRC algorithm.
@@ -133,6 +143,13 @@ def check_file(opt):
     if opt.undefined_crc_parameters:
         sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
+
+    assert opt.width is not None
+    assert opt.poly is not None
+    assert opt.reflect_in is not None
+    assert opt.xor_in is not None
+    assert opt.reflect_out is not None
+    assert opt.xor_out is not None
     alg = Crc(
         width=opt.width,
         poly=opt.poly,
@@ -147,6 +164,7 @@ def check_file(opt):
     # As in the rocksoft reference implementation
     register = opt.xor_in
 
+    assert opt.check_file is not None
     try:
         with open(opt.check_file, "rb") as f:
             check_bytes = bytearray(f.read(4096))
@@ -163,7 +181,7 @@ def check_file(opt):
     return register
 
 
-def write_file(filename, out_str):
+def write_file(filename: str, out_str: str) -> None:
     """
     Write the content of out_str to filename.
     """
@@ -175,7 +193,7 @@ def write_file(filename, out_str):
         sys.exit(1)
 
 
-def main():
+def main() -> int:
     """
     Main function.
     """

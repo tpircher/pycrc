@@ -5,7 +5,7 @@
 from pycrc import expr
 
 
-def test_sub_simplify():
+def test_sub_simplify() -> None:
     """Subtraction must be folded safely, in particular 0 - x."""
     # A subtraction of two integers is folded into a constant.
     assert str(expr.Sub(5, 3).simplify()) == "2"
@@ -15,7 +15,7 @@ def test_sub_simplify():
     assert str(expr.Sub(0, "x").simplify()) == "0 - x"
 
 
-def test_other_simplifications():
+def test_other_simplifications() -> None:
     """The neutral and absorbing elements of the operators must simplify."""
     assert str(expr.Add("x", 0).simplify()) == "x"
     assert str(expr.Mul("x", 0).simplify()) == "0"

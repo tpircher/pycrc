@@ -43,6 +43,10 @@ To print the parameters of a particular model:
         print("model not found.")
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 
 class CrcModels:
     """
@@ -51,9 +55,9 @@ class CrcModels:
     All models are defined as constant class variables.
     """
 
-    models = []
+    _models: list[dict[str, Any]] = []
 
-    models.append(
+    _models.append(
         {
             "name": "crc-5",
             "width": 5,
@@ -65,7 +69,7 @@ class CrcModels:
             "check": 0x19,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-8",
             "width": 8,
@@ -77,7 +81,7 @@ class CrcModels:
             "check": 0xF4,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "dallas-1-wire",
             "width": 8,
@@ -89,7 +93,7 @@ class CrcModels:
             "check": 0xA1,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-12-3gpp",
             "width": 12,
@@ -101,7 +105,7 @@ class CrcModels:
             "check": 0xDAF,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-15",
             "width": 15,
@@ -113,7 +117,7 @@ class CrcModels:
             "check": 0x59E,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-16",
             "width": 16,
@@ -125,7 +129,7 @@ class CrcModels:
             "check": 0xBB3D,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-16-usb",
             "width": 16,
@@ -137,7 +141,7 @@ class CrcModels:
             "check": 0xB4C8,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-16-modbus",
             "width": 16,
@@ -149,7 +153,7 @@ class CrcModels:
             "check": 0x4B37,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-16-genibus",
             "width": 16,
@@ -161,7 +165,7 @@ class CrcModels:
             "check": 0xD64E,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-16-ccitt",
             "width": 16,
@@ -173,7 +177,7 @@ class CrcModels:
             "check": 0xE5CC,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "r-crc-16",
             "width": 16,
@@ -185,7 +189,7 @@ class CrcModels:
             "check": 0x007E,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "kermit",
             "width": 16,
@@ -197,7 +201,7 @@ class CrcModels:
             "check": 0x2189,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "x-25",
             "width": 16,
@@ -209,7 +213,7 @@ class CrcModels:
             "check": 0x906E,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "xmodem",
             "width": 16,
@@ -221,7 +225,7 @@ class CrcModels:
             "check": 0x31C3,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "zmodem",
             "width": 16,
@@ -233,7 +237,7 @@ class CrcModels:
             "check": 0x31C3,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-24",
             "width": 24,
@@ -245,7 +249,7 @@ class CrcModels:
             "check": 0x21CF02,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-32",
             "width": 32,
@@ -257,7 +261,7 @@ class CrcModels:
             "check": 0xCBF43926,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-32c",
             "width": 32,
@@ -269,7 +273,7 @@ class CrcModels:
             "check": 0xE3069283,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-32-mpeg",
             "width": 32,
@@ -281,7 +285,7 @@ class CrcModels:
             "check": 0x0376E6E7,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-32-bzip2",
             "width": 32,
@@ -293,7 +297,7 @@ class CrcModels:
             "check": 0xFC891918,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "posix",
             "width": 32,
@@ -305,7 +309,7 @@ class CrcModels:
             "check": 0x765E7680,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "jam",
             "width": 32,
@@ -317,7 +321,7 @@ class CrcModels:
             "check": 0x340BC6D9,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "xfer",
             "width": 32,
@@ -329,7 +333,7 @@ class CrcModels:
             "check": 0xBD0BE338,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-64",
             "width": 64,
@@ -341,7 +345,7 @@ class CrcModels:
             "check": 0x46A5A9388A5BEFFE,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-64-jones",
             "width": 64,
@@ -353,7 +357,7 @@ class CrcModels:
             "check": 0xCAA717168609F281,
         }
     )
-    models.append(
+    _models.append(
         {
             "name": "crc-64-xz",
             "width": 64,
@@ -368,15 +372,15 @@ class CrcModels:
 
     # Make the collection immutable so that callers cannot accidentally add
     # or remove model definitions. Individual dicts are copied by get_params().
-    models = tuple(models)
+    models: tuple[dict[str, Any], ...] = tuple(_models)
 
-    def names(self):
+    def names(self) -> list[str]:
         """
         Return the list of supported CRC models.
         """
         return [model["name"] for model in self.models]
 
-    def get_params(self, model):
+    def get_params(self, model: str) -> dict[str, Any] | None:
         """
         Return the parameters of a given model.
 

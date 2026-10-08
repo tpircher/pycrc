@@ -1,27 +1,33 @@
-pycrc
-=====
+# pycrc
 
 [pycrc](https://pycrc.org) is a free, easy to use Cyclic Redundancy Check (CRC)
 calculator and C source code generator.
 
 
-System Requirements
--------------------
+## System Requirements
 
 Python 3.10 or newer is required to run pycrc.
 The last version compatible with Python 2 is v0.9.x.
 
-Running pycrc
--------------
 
-This program doesn't need to be installed to be run. The script can be
-executed from the source directory.
-Simply call the python interpreter with the script as parameter:
+## Running pycrc
 
-    python3 src/pycrc.py [options]
+The easiest way to run pycrc is to install it in a virtual environment, e.g.:
 
-Installation
-------------
+    python3 -m venv .venv
+    . .venv/bin/activate
+    python3 -m pip install pycrc
+
+Then the pycrc executable is included in the path in the virtual environment:
+
+    pycrc [OPTIONS]
+
+or
+
+    python3 -m pycrc [OPTIONS]
+
+
+## Installation
 
 Install pycrc (if required) using pip:
 
@@ -36,11 +42,10 @@ Either of these will install a `pycrc` binary in the path.
 
 Once installed you can also run it as a module:
 
-    python3 -m pycrc [options]
+    python3 -m pycrc [OPTIONS]
 
 
-Development
------------
+## Development
 
 Create a virtual environment and install the package in editable mode together
 with the development tools:
@@ -49,18 +54,45 @@ with the development tools:
     . .venv/bin/activate
     python3 -m pip install -e ".[dev]"
 
-Run the test suite with pytest and check the code style with ruff:
+
+### Running the tests
+
+Run the whole test suite with pytest:
 
     pytest
+
+The tests in `test/test_codegen.py` and `test/test_cli.py` generate C source
+code, compile it and run it, so a C compiler (`cc`) must be installed and
+available on the `PATH`.
+
+To run a single test file, class or function, pass it to pytest:
+
+    pytest test/test_algorithms.py
+    pytest test/test_codegen.py::TestCodeGen
+    pytest test/test_algorithms.py::test_all_models_with_check_input
+
+To measure test coverage (and enforce the minimum coverage configured in
+`pyproject.toml`):
+
+    pytest --cov=pycrc --cov-report=term-missing
+
+The code generation and CLI tests spawn subprocesses. To include the code that
+runs in those subprocesses in the coverage report, point
+`COVERAGE_PROCESS_START` at `pyproject.toml`, as the CI workflow does:
+
+    COVERAGE_PROCESS_START="$PWD/pyproject.toml" pytest --cov=pycrc --cov-report=term-missing
+
+**Checking the code style and types**
+
     ruff check .
+    mypy
 
 Build the source and wheel distributions with:
 
     python3 -m build
 
 
-Getting help
-------------
+## Getting help
 
 If you are new to pycrc and want to generate C code, start with
 [the tutorial](https://pycrc.org/tutorial.html).
@@ -76,8 +108,7 @@ Thanks for your help.
 Also see the [frequently asked questions](https://pycrc.org/faq.html).
 
 
-Feedback
---------
+## Feedback
 
 If you like pycrc, let me know and drop me a note. If you don't like pycrc let
 me know what you don't like and why.
@@ -85,8 +116,7 @@ If you want some idea how to say thanks for this software, please have a look
 [here](https://www.tty1.net/say-thanks_en.html).
 
 
-Copyright of the generated source code
---------------------------------------
+## Copyright of the generated source code
 
 The MIT licence allows commercial use of the source and the output of the
 program. But since I got asked on occasion whether the generated code is

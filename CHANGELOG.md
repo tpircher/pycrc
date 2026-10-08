@@ -15,6 +15,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   - Switch from flake8 to ruff
 - Check if `SOURCE_DATE_EPOCH` is set, for reproducible builds
 - Replace deprecated optparse with argparse
+- Add type annotations to the source and test code and a `mypy` configuration
+- Document how to run the tests in the README
 
 ### Fixed
 

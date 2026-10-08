@@ -31,8 +31,12 @@ use as follows:
    opt.parse(sys.argv[1:])
 """
 
+from __future__ import annotations
+
 import argparse
 import sys
+from collections.abc import Sequence
+from typing import Any, NoReturn
 
 from pycrc.models import CrcModels
 
@@ -56,43 +60,43 @@ class Options:
     action_generate_c_main = 0x06
     action_generate_table = 0x07
 
-    def __init__(self, progname="pycrc", version="unknown", url="unknown"):
+    def __init__(self, progname: str = "pycrc", version: str = "unknown", url: str = "unknown") -> None:
         """
         Create an option container.
 
         The CRC parameters are initially undefined; call parse() to fill them
         in from the command line.
         """
-        self.program_name = progname
-        self.version = version
-        self.version_str = f"{progname} v{version}"
-        self.web_address = url
+        self.program_name: str = progname
+        self.version: str = version
+        self.version_str: str = f"{progname} v{version}"
+        self.web_address: str = url
 
-        self.width = None
-        self.poly = None
-        self.reflect_in = None
-        self.xor_in = None
-        self.reflect_out = None
-        self.xor_out = None
-        self.tbl_idx_width = 8
-        self.tbl_width = 1 << self.tbl_idx_width
-        self.slice_by = 1
-        self.verbose = False
-        self.check_string = "123456789"
-        self.msb_mask = None
-        self.mask = None
+        self.width: int | None = None
+        self.poly: int | None = None
+        self.reflect_in: bool | None = None
+        self.xor_in: int | None = None
+        self.reflect_out: bool | None = None
+        self.xor_out: int | None = None
+        self.tbl_idx_width: int = 8
+        self.tbl_width: int = 1 << self.tbl_idx_width
+        self.slice_by: int = 1
+        self.verbose: bool = False
+        self.check_string: str | bytes | bytearray = "123456789"
+        self.msb_mask: int | None = None
+        self.mask: int | None = None
 
-        self.algorithm = self.algo_none
-        self.symbol_prefix = "crc_"
-        self.crc_type = None
-        self.include_files = []
-        self.output_file = None
-        self.action = self.action_check_str
-        self.check_file = None
-        self.c_std = None
-        self.undefined_crc_parameters = False
+        self.algorithm: int = self.algo_none
+        self.symbol_prefix: str = "crc_"
+        self.crc_type: str | None = None
+        self.include_files: list[str] = []
+        self.output_file: str | None = None
+        self.action: int = self.action_check_str
+        self.check_file: str | None = None
+        self.c_std: str | None = None
+        self.undefined_crc_parameters: bool = False
 
-    def parse(self, argv=None):
+    def parse(self, argv: list[str] | None = None) -> None:
         """
         Parses and validates the options given as arguments
         """
@@ -232,7 +236,7 @@ of the following parameters:
         self._resolve_action(options)
         self._validate_action(options, args, undefined_params)
 
-    def _parse_c_std(self, options):
+    def _parse_c_std(self, options: argparse.Namespace) -> None:
         """
         Validate and store the requested C standard.
         """
@@ -245,7 +249,7 @@ of the following parameters:
             else:
                 self.__error(f"unknown C standard {options.c_std}")
 
-    def _parse_model_params(self, options):
+    def _parse_model_params(self, options: argparse.Namespace) -> list[str]:
         """
         Store the individual CRC model parameters and return the list of the
         parameters that were not supplied.
@@ -277,7 +281,7 @@ of the following parameters:
             undefined_params.append("--xor-out")
         return undefined_params
 
-    def _parse_table_idx_width(self, options):
+    def _parse_table_idx_width(self, options: argparse.Namespace) -> None:
         """
         Validate and store the table index width.
         """
@@ -288,7 +292,7 @@ of the following parameters:
             else:
                 self.__error(f"unsupported table-idx-width {options.table_idx_width}")
 
-    def _validate_bits(self, options):
+    def _validate_bits(self, options: argparse.Namespace) -> None:
         """
         Validate the width and polynomial and derive the bit masks.
         """
@@ -321,7 +325,7 @@ of the following parameters:
             and self.xor_out is not None
         )
 
-    def _parse_slice_by(self, options):
+    def _parse_slice_by(self, options: argparse.Namespace) -> None:
         """
         Validate and store the --slice-by value.
         """
@@ -335,6 +339,7 @@ of the following parameters:
             if self.tbl_idx_width != 8:
                 self.__error("slice-by is only implemented for table-idx-width=8")
             # FIXME tp: Fix corner cases and disable the following tests
+            assert self.width is not None
             if self.width < 16 or self.width > 32:
                 self.__warning(f"disabling slice-by for width {self.width}")
                 self.slice_by = 1
@@ -349,7 +354,7 @@ of the following parameters:
             if self.c_std == "C89":
                 self.__error("--slice-by not supported for C89")
 
-    def _parse_algorithm(self, options):
+    def _parse_algorithm(self, options: argparse.Namespace) -> None:
         """
         Validate and store the selected algorithm(s).
         """
@@ -364,7 +369,7 @@ of the following parameters:
             if self.algorithm == 0:
                 self.__error(f"unknown algorithm {options.algorithm}")
 
-    def _parse_output_options(self, options):
+    def _parse_output_options(self, options: argparse.Namespace) -> None:
         """
         Store the options that affect the generated source code.
         """
@@ -377,7 +382,7 @@ of the following parameters:
         if options.output_file is not None:
             self.output_file = options.output_file
 
-    def _resolve_action(self, options):
+    def _resolve_action(self, options: argparse.Namespace) -> int:
         """
         Determine which action was requested and make sure exactly one was
         given. Return the number of actions.
@@ -426,7 +431,7 @@ of the following parameters:
             self.__error("too many actions specified")
         return op_count
 
-    def _validate_action(self, options, args, undefined_params):
+    def _validate_action(self, options: argparse.Namespace, args: list[str], undefined_params: list[str]) -> None:
         """
         Perform the checks that depend on the resolved action.
         """
@@ -457,13 +462,13 @@ of the following parameters:
             self.__error(f"undefined parameters: Add {undefined_params_str} or use --model")
         self.verbose = options.verbose
 
-    def __warning(self, message):
+    def __warning(self, message: str) -> None:
         """
         Print a warning message to stderr.
         """
         sys.stderr.write(f"{self.program_name}: warning: {message}\n")
 
-    def __error(self, message):
+    def __error(self, message: str) -> NoReturn:
         """
         Print an error message to stderr and terminate the program.
         """
@@ -476,10 +481,17 @@ class _ModelAction(argparse.Action):
     Set the individual model parameters when the --model option is given.
     """
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
         """
         Set the individual model parameters from the selected model.
         """
+        assert isinstance(values, str)
         models = CrcModels()
         model = models.get_params(values.lower())
         if model is None:
@@ -490,7 +502,7 @@ class _ModelAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def _hex_type(value):
+def _hex_type(value: str) -> int:
     """
     Convert a decimal or hexadecimal integer string to an integer.
     """
@@ -502,7 +514,7 @@ def _hex_type(value):
         raise argparse.ArgumentTypeError(f"invalid integer or hexadecimal value: {value}.") from exc
 
 
-def _bool_type(value):
+def _bool_type(value: str) -> bool:
     """
     Convert 0/1, "true" or "false" to a boolean value.
     """

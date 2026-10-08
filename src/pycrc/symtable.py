@@ -35,10 +35,16 @@ use as follows:
     print(f'width: {sym.crc_width}, poly: {sym.crc_poly}')
 """
 
+from __future__ import annotations
+
 import os
 import time
+from typing import TYPE_CHECKING, cast
 
 from pycrc.algorithms import Crc
+
+if TYPE_CHECKING:
+    from pycrc.opt import Options
 
 
 class SymbolTable:
@@ -46,11 +52,11 @@ class SymbolTable:
     A class with the symbols as public members.
     """
 
-    def __init__(self, opt):
+    def __init__(self, opt: Options) -> None:
         """
         Create a symbol table for the given options.
         """
-        self._opt = opt
+        self._opt: Options = opt
         self.tbl_shift = _tbl_shift(opt)
 
         self.datetime = _get_datetime()
@@ -109,11 +115,11 @@ class SymbolTable:
         self.crc_update_function = self._opt.symbol_prefix + "update"
         self.crc_finalize_function = self._opt.symbol_prefix + "finalize"
 
-        self._crc_init_value = None
-        self._crc_table_init = None
+        self._crc_init_value: str | None = None
+        self._crc_table_init: str | None = None
 
     @property
-    def crc_init_value(self):
+    def crc_init_value(self) -> str | None:
         """
         The initial CRC value, or None if it must be taken from cfg at run time.
         """
@@ -122,7 +128,7 @@ class SymbolTable:
         return self._crc_init_value
 
     @property
-    def crc_table_init(self):
+    def crc_table_init(self) -> str:
         """
         The precalculated CRC table used by the table-driven algorithm.
         """
@@ -131,7 +137,7 @@ class SymbolTable:
         return self._crc_table_init
 
 
-def _pretty_str(value):
+def _pretty_str(value: int | str | None) -> str:
     """
     Return a value of width bits as a pretty string.
     """
@@ -140,7 +146,7 @@ def _pretty_str(value):
     return str(value)
 
 
-def _pretty_hex(value, width=None):
+def _pretty_hex(value: int | None, width: int | None = None) -> str:
     """
     Return a value of width bits as a pretty hexadecimal formatted string.
     """
@@ -153,7 +159,7 @@ def _pretty_hex(value, width=None):
     return hex_str.format(value)
 
 
-def _pretty_bool(value):
+def _pretty_bool(value: bool | None) -> str:
     """
     Return a boolen value of width bits as a pretty formatted string.
     """
@@ -162,7 +168,7 @@ def _pretty_bool(value):
     return "True" if value else "False"
 
 
-def _get_datetime():
+def _get_datetime() -> str:
     """
     Return the timestamp used in the generated file headers.
 
@@ -179,7 +185,7 @@ def _get_datetime():
     return time.asctime()
 
 
-def _pretty_algorithm(opt):
+def _pretty_algorithm(opt: Options) -> str:
     """
     Return the algorithm name.
     """
@@ -193,7 +199,7 @@ def _pretty_algorithm(opt):
         return "UNDEFINED"
 
 
-def _pretty_header_filename(filename):
+def _pretty_header_filename(filename: str | None) -> str:
     """
     Return the sanitized filename of a header file.
     """
@@ -206,7 +212,7 @@ def _pretty_header_filename(filename):
         return filename + ".h"
 
 
-def _pretty_hdrprotection(opt):
+def _pretty_hdrprotection(opt: Options) -> str:
     """
     Return the name of a C header protection (e.g. CRC_IMPLEMENTATION_H).
     """
@@ -217,7 +223,7 @@ def _pretty_hdrprotection(opt):
     return out_str
 
 
-def _get_underlying_crc_t(opt):
+def _get_underlying_crc_t(opt: Options) -> str:
     """
     Return the C type of the crc_t typedef.
     """
@@ -248,7 +254,7 @@ def _get_underlying_crc_t(opt):
         return "uintmax_t"
 
 
-def _get_init_value(opt):
+def _get_init_value(opt: Options) -> str | None:
     """
     Return the init value of a C implementation, according to the selected
     algorithm and to the given options.
@@ -261,10 +267,10 @@ def _get_init_value(opt):
         crc = Crc(
             width=opt.width,
             poly=opt.poly,
-            reflect_in=opt.reflect_in,
+            reflect_in=cast(bool, opt.reflect_in),
             xor_in=opt.xor_in,
-            reflect_out=opt.reflect_out,
-            xor_out=opt.xor_out,
+            reflect_out=cast(bool, opt.reflect_out),
+            xor_out=cast(int, opt.xor_out),
             table_idx_width=opt.tbl_idx_width,
         )
         init = crc.nondirect_init
@@ -281,8 +287,8 @@ def _get_init_value(opt):
             poly=poly,
             reflect_in=opt.reflect_in,
             xor_in=opt.xor_in,
-            reflect_out=opt.reflect_out,
-            xor_out=opt.xor_out,
+            reflect_out=cast(bool, opt.reflect_out),
+            xor_out=cast(int, opt.xor_out),
             table_idx_width=opt.tbl_idx_width,
         )
         init = crc.reflect(crc.direct_init, opt.width) if opt.reflect_in else crc.direct_init
@@ -291,7 +297,7 @@ def _get_init_value(opt):
     return _pretty_hex(init, opt.width)
 
 
-def _get_simple_table(opt, crc_tbl, values_per_line, format_width, indent):
+def _get_simple_table(opt: Options, crc_tbl: list[int], values_per_line: int, format_width: int, indent: int) -> str:
     """
     Get one CRC table, formatted as string with appropriate indenting and
     line breaks.
@@ -310,7 +316,7 @@ def _get_simple_table(opt, crc_tbl, values_per_line, format_width, indent):
     return out
 
 
-def _get_table_init(opt):  # TODO: change to return a list
+def _get_table_init(opt: Options) -> str:  # TODO: change to return a list
     """
     Return the precalculated CRC table for the table_driven implementation.
     """
@@ -338,17 +344,17 @@ def _get_table_init(opt):  # TODO: change to return a list
     format_width = max(opt.width, 8)
     indent = 4 if opt.slice_by == 1 else 8
 
-    out = [""] * opt.slice_by
+    rows = [""] * opt.slice_by
     for i in range(opt.slice_by):
-        out[i] = _get_simple_table(opt, crc_tbl[i], values_per_line, format_width, indent)
+        rows[i] = _get_simple_table(opt, crc_tbl[i], values_per_line, format_width, indent)
     fixed_indent = " " * (indent - 4)
-    out = f"{fixed_indent:s}{{\n" + f"\n{fixed_indent:s}}},\n{fixed_indent:s}{{\n".join(out) + f"\n{fixed_indent:s}}}"
+    out = f"{fixed_indent:s}{{\n" + f"\n{fixed_indent:s}}},\n{fixed_indent:s}{{\n".join(rows) + f"\n{fixed_indent:s}}}"
     if opt.slice_by == 1:
         return out
     return "{\n" + out + "\n}"
 
 
-def _tbl_shift(opt):
+def _tbl_shift(opt: Options) -> int | None:
     """
     Return the table shift value
     """

@@ -45,13 +45,25 @@ This is an example use of the different algorithms:
     print("{0:#x}".format(crc.table_driven("123456789")))
 """
 
+from __future__ import annotations
+
 
 class Crc:
     """
     A base class for CRC routines.
     """
 
-    def __init__(self, width, poly, reflect_in, xor_in, reflect_out, xor_out, table_idx_width=None, slice_by=1):
+    def __init__(
+        self,
+        width: int,
+        poly: int,
+        reflect_in: bool,
+        xor_in: int,
+        reflect_out: bool,
+        xor_out: int,
+        table_idx_width: int | None = None,
+        slice_by: int = 1,
+    ) -> None:
         """
         Create a CRC object, using the Rocksoft model.
 
@@ -64,33 +76,31 @@ class Crc:
             xor_out
         """
 
-        self.width = width
-        self.poly = poly
-        self.reflect_in = reflect_in
-        self.xor_in = xor_in
-        self.reflect_out = reflect_out
-        self.xor_out = xor_out
-        self.tbl_idx_width = table_idx_width
-        self.slice_by = slice_by
+        self.width: int = width
+        self.poly: int = poly
+        self.reflect_in: bool = reflect_in
+        self.xor_in: int = xor_in
+        self.reflect_out: bool = reflect_out
+        self.xor_out: int = xor_out
+        self.slice_by: int = slice_by
+        if table_idx_width is None:
+            table_idx_width = 8
+        self.tbl_idx_width: int = table_idx_width
 
-        self.msb_mask = 0x1 << (self.width - 1)
-        self.mask = ((self.msb_mask - 1) << 1) | 1
-        if self.tbl_idx_width is not None:
-            self.tbl_width = 1 << self.tbl_idx_width
-        else:
-            self.tbl_idx_width = 8
-            self.tbl_width = 1 << self.tbl_idx_width
+        self.msb_mask: int = 0x1 << (self.width - 1)
+        self.mask: int = ((self.msb_mask - 1) << 1) | 1
+        self.tbl_width: int = 1 << self.tbl_idx_width
 
-        self.direct_init = self.xor_in
-        self.nondirect_init = self.__get_nondirect_init(self.xor_in)
+        self.direct_init: int = self.xor_in
+        self.nondirect_init: int = self.__get_nondirect_init(self.xor_in)
         if self.width < 8:
-            self.crc_shift = 8 - self.width
+            self.crc_shift: int = 8 - self.width
         else:
             self.crc_shift = 0
 
-        self.tbl = self.gen_table()
+        self.tbl: list[list[int]] = self.gen_table()
 
-    def __get_nondirect_init(self, init):
+    def __get_nondirect_init(self, init: int) -> int:
         """
         return the non-direct init if the direct algorithm has been selected.
         """
@@ -104,7 +114,7 @@ class Crc:
                 crc |= self.msb_mask
         return crc & self.mask
 
-    def reflect(self, data, width):
+    def reflect(self, data: int, width: int) -> int:
         """
         reflect a data word, i.e. reverts the bit order.
         """
@@ -115,7 +125,7 @@ class Crc:
             res = (res << 1) | (data & 0x01)
         return res
 
-    def bit_by_bit(self, in_data):
+    def bit_by_bit(self, in_data: str | bytes | bytearray) -> int:
         """
         Classic simple and slow CRC implementation.  This function iterates bit
         by bit over the augmented input message and returns the calculated CRC
@@ -145,7 +155,7 @@ class Crc:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-    def bit_by_bit_fast_update(self, reg, in_data):
+    def bit_by_bit_fast_update(self, reg: int, in_data: str | bytes | bytearray) -> int:
         """
         Update a CRC register with the bit-by-bit-fast algorithm and return
         the new register value.
@@ -171,7 +181,7 @@ class Crc:
             reg &= self.mask
         return reg
 
-    def bit_by_bit_fast(self, in_data):
+    def bit_by_bit_fast(self, in_data: str | bytes | bytearray) -> int:
         """
         This is a slightly modified version of the bit-by-bit algorithm: it
         does not need to loop over the augmented bits, i.e. the Width 0-bits
@@ -182,7 +192,7 @@ class Crc:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-    def gen_table(self):
+    def gen_table(self) -> list[list[int]]:
         """
         This function generates the CRC table used for the table_driven CRC
         algorithm.  The Python version cannot handle tables of an index width
@@ -209,7 +219,7 @@ class Crc:
                 tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xFF]
         return tbl
 
-    def table_driven(self, in_data):
+    def table_driven(self, in_data: str | bytes | bytearray) -> int:
         """
         The Standard table_driven CRC algorithm.
         """

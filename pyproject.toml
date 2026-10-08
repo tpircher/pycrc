@@ -32,6 +32,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
+    "mypy>=1.10",
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.5",
@@ -75,6 +76,10 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "W", "I", "UP", "B", "SIM", "C4"]
 ignore = ["UP030"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/pycrc"]
 
 [tool.coverage.run]
 branch = true

@@ -34,8 +34,14 @@ use as follows:
         ]))
 """
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+
 import pycrc.expr as expr
 import pycrc.symtable
+from pycrc.opt import Options
+from pycrc.symtable import SymbolTable
 
 
 class CodeGen:
@@ -46,20 +52,20 @@ class CodeGen:
     method renders the tree to a list of indented lines.
     """
 
-    def __init__(self, opt, indent, content=None):
+    def __init__(self, opt: Options, indent: str | None, content: Sequence[CodeGen | str] | None = None) -> None:
         """
         The class constructor.
         """
-        self.opt = opt
-        self.sym = pycrc.symtable.SymbolTable(opt)
-        self.indent = indent
-        self.content = content if content is not None else []
+        self.opt: Options = opt
+        self.sym: SymbolTable = pycrc.symtable.SymbolTable(opt)
+        self.indent: str | None = indent
+        self.content: Sequence[CodeGen | str] = content if content is not None else []
 
-    def gen(self, indent=""):
+    def gen(self, indent: str = "") -> list[str]:
         """
         Return an array code lines.
         """
-        out = []
+        out: list[str] = []
         if self.indent is None:
             indent = ""
         else:
@@ -71,7 +77,7 @@ class CodeGen:
                 out += item.gen(indent)
         return out
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return the generated code as one big string.
         """
@@ -83,7 +89,7 @@ class Conditional(CodeGen):
     A conditional block of code.
     """
 
-    def __init__(self, opt, indent, condition, content):
+    def __init__(self, opt: Options, indent: str | None, condition: bool | None, content: Sequence[CodeGen | str]) -> None:
         """
         The class constructor.
         """
@@ -97,7 +103,14 @@ class Conditional2(CodeGen):
     A conditional block of code with an else block.
     """
 
-    def __init__(self, opt, indent, condition, content_true, content_false):
+    def __init__(
+        self,
+        opt: Options,
+        indent: str | None,
+        condition: bool | None,
+        content_true: Sequence[CodeGen | str],
+        content_false: Sequence[CodeGen | str],
+    ) -> None:
         """
         The class constructor.
         """
@@ -113,12 +126,12 @@ class Comment(CodeGen):
     A comment wrapper.
     """
 
-    def __init__(self, opt, indent, content):
+    def __init__(self, opt: Options, indent: str | None, content: Sequence[CodeGen | str]) -> None:
         """
         The class constructor.
         """
         super().__init__(opt, indent)
-        self.content = ["/**", CodeGen(opt, indent + " * ", content), " */"]
+        self.content = ["/**", CodeGen(opt, (indent or "") + " * ", content), " */"]
 
 
 class ParamBlock(CodeGen):
@@ -126,7 +139,7 @@ class ParamBlock(CodeGen):
     Render the parameters of the model.
     """
 
-    def __init__(self, opt, indent, algorithm=False):
+    def __init__(self, opt: Options, indent: str | None, algorithm: bool = False) -> None:
         """
         The class constructor.
         """
@@ -148,7 +161,7 @@ class File(CodeGen):
     Generate the code for a C/C++ source file (header or implementation).
     """
 
-    def __init__(self, opt, indent):
+    def __init__(self, opt: Options, indent: str | None) -> None:
         """
         The class constructor.
         """
@@ -164,11 +177,11 @@ class File(CodeGen):
         if opt.action == opt.action_generate_table:
             self.content = [f"{self.sym.crc_table_init}"]
 
-    def _code_file(self):
+    def _code_file(self) -> list[CodeGen | str]:
         """
         Add code file
         """
-        out = [
+        out: list[CodeGen | str] = [
             Comment(
                 self.opt,
                 "",
@@ -303,11 +316,11 @@ class File(CodeGen):
         ]
         return out
 
-    def _header_file(self):
+    def _header_file(self) -> list[CodeGen | str]:
         """
         Generate the content of a header file.
         """
-        out = [
+        out: list[CodeGen | str] = [
             f"#ifndef {self.sym.header_protection}",
             f"#define {self.sym.header_protection}",
             "",
@@ -586,11 +599,11 @@ class File(CodeGen):
         ]
         return out
 
-    def _c_file(self):
+    def _c_file(self) -> list[CodeGen | str]:
         """
         Generate the content of a C/C++ source file.
         """
-        out = [
+        out: list[CodeGen | str] = [
             CodeGen(self.opt, "", _includes(self.opt)),
             f'#include "{self.sym.header_filename}"     /* include the header file generated with pycrc */',
             "#include <stdlib.h>",
@@ -640,11 +653,11 @@ class File(CodeGen):
         ]
         return out
 
-    def _main_file(self):
+    def _main_file(self) -> list[CodeGen | str]:
         """
         Generate the content of a main source file.
         """
-        out = [
+        out: list[CodeGen | str] = [
             "",
             "",
             CodeGen(self.opt, "", _includes(self.opt)),
@@ -881,11 +894,11 @@ class File(CodeGen):
         ]
         return out
 
-    def _getopt_template(self):
+    def _getopt_template(self) -> CodeGen:
         """
         Add option handler code.
         """
-        out = [
+        out: list[CodeGen | str] = [
             Conditional(
                 self.opt,
                 "",
@@ -1370,11 +1383,11 @@ class File(CodeGen):
         return CodeGen(self.opt, "", out)
 
 
-def _includes(opt):
+def _includes(opt: Options) -> list[str]:
     """
     Return the #include directives for the user-defined list of include files.
     """
-    includes = []
+    includes: list[str] = []
     if opt.include_files is not None and len(opt.include_files) > 0:
         for include_file in opt.include_files:
             if include_file[0] == '"' or include_file[0] == "<":
@@ -1384,7 +1397,7 @@ def _includes(opt):
     return includes
 
 
-def _crc_algo_define(opt, sym):
+def _crc_algo_define(opt: Options, sym: SymbolTable) -> str:
     """
     Get the identifier of the algorithm for the header file.
     """
@@ -1392,21 +1405,21 @@ def _crc_algo_define(opt, sym):
     return "CRC_ALGO_" + name
 
 
-def _use_cfg(opt):
+def _use_cfg(opt: Options) -> bool:
     """
     Return True if a cfg_t structure is to be used.
     """
     return opt.undefined_crc_parameters
 
 
-def _use_constant_crc_init(sym):
+def _use_constant_crc_init(sym: SymbolTable) -> bool:
     """
     Return True if the inintial value is constant.
     """
     return sym.crc_init_value is not None
 
 
-def _use_reflect_func(opt):
+def _use_reflect_func(opt: Options) -> bool:
     """
     Return True if the reflect function is to be used.
     """
@@ -1430,7 +1443,7 @@ def _use_reflect_func(opt):
     return False
 
 
-def _use_static_reflect_func(opt):
+def _use_static_reflect_func(opt: Options) -> bool:
     """
     Whether a static reflect function is to be used.
     """
@@ -1439,7 +1452,7 @@ def _use_static_reflect_func(opt):
     return not (opt.reflect_out is not None and opt.algorithm == opt.algo_bit_by_bit_fast)
 
 
-def _use_crc_table_gen(opt):
+def _use_crc_table_gen(opt: Options) -> bool:
     """
     Return True if the table generator function is to be generated.
     """
@@ -1449,7 +1462,7 @@ def _use_crc_table_gen(opt):
         return False
 
 
-def _crc_init_function_def(opt, sym):
+def _crc_init_function_def(opt: Options, sym: SymbolTable) -> str:
     """
     The definition for the init function.
     """
@@ -1459,7 +1472,7 @@ def _crc_init_function_def(opt, sym):
         return f"{sym.crc_t} {sym.crc_init_function}(const {sym.cfg_t} *cfg)"
 
 
-def _crc_update_without_cfg(opt):
+def _crc_update_without_cfg(opt: Options) -> bool:
     """
     Return True if the update function can be generated without the cfg_t
     parameter, because all required parameters are compile-time constants.
@@ -1472,7 +1485,7 @@ def _crc_update_without_cfg(opt):
     ) or (opt.algorithm == opt.algo_table_driven and opt.width is not None and opt.reflect_in is not None)
 
 
-def _crc_update_function_def(opt, sym):
+def _crc_update_function_def(opt: Options, sym: SymbolTable) -> str:
     """
     The definition of the update function.
     """
@@ -1482,7 +1495,7 @@ def _crc_update_function_def(opt, sym):
         return f"{sym.crc_t} {sym.crc_update_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc, const void *data, size_t data_len)"
 
 
-def _crc_finalize_without_cfg(opt):
+def _crc_finalize_without_cfg(opt: Options) -> bool:
     """
     Return True if the finalize function can be generated without the cfg_t
     parameter, because all required parameters are compile-time constants.
@@ -1511,7 +1524,7 @@ def _crc_finalize_without_cfg(opt):
     )
 
 
-def _use_inline_crc_finalize(opt):
+def _use_inline_crc_finalize(opt: Options) -> bool:
     """
     Return True if the finalize function can be inlined.
     """
@@ -1524,14 +1537,14 @@ def _use_inline_crc_finalize(opt):
     )
 
 
-def _use_constant_crc_table(opt):
+def _use_constant_crc_table(opt: Options) -> bool:
     """
     Return True if the CRC table is constant.
     """
     return opt.width is not None and opt.poly is not None and opt.reflect_in is not None
 
 
-def _crc_finalize_function_def(opt, sym):
+def _crc_finalize_function_def(opt: Options, sym: SymbolTable) -> str:
     """
     The definition of the finalize function.
     """
@@ -1541,7 +1554,7 @@ def _crc_finalize_function_def(opt, sym):
         return f"{sym.crc_t} {sym.crc_finalize_function}(const {sym.cfg_t} *cfg, {sym.crc_t} crc)"
 
 
-def _crc_final_value(opt, sym):
+def _crc_final_value(opt: Options, sym: SymbolTable) -> expr.Expression:
     """
     The return value for the finalize function.
     """
@@ -1557,7 +1570,7 @@ def _crc_final_value(opt, sym):
     return expr.Xor("crc", sym.crc_xor_out).simplify()
 
 
-def _crc_table(opt, sym):
+def _crc_table(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the CRC table or the generator function.
     """
@@ -1605,7 +1618,7 @@ def _crc_table(opt, sym):
     ]
 
 
-def _crc_table_gen(opt, sym):
+def _crc_table_gen(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the CRC table or the generator function.
     """
@@ -1757,7 +1770,7 @@ def _crc_table_gen(opt, sym):
     ]
 
 
-def _crc_reflect_function_gen(opt, sym):
+def _crc_reflect_function_gen(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the reflect functon.
     """
@@ -1795,13 +1808,13 @@ def _crc_reflect_function_gen(opt, sym):
     ]
 
 
-def _crc_init_function_gen(opt, sym):
+def _crc_init_function_gen(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the init function.
     """
     if _use_constant_crc_init(sym):
         return []
-    out = [
+    out: list[CodeGen | str] = [
         "",
         "",
         _crc_init_function_def(opt, sym),
@@ -1906,11 +1919,11 @@ def _crc_init_function_gen(opt, sym):
     return out
 
 
-def _crc_update_function_gen(opt, sym):
+def _crc_update_function_gen(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the update function.
     """
-    out = [
+    out: list[CodeGen | str] = [
         "",
         "",
         _crc_update_function_def(opt, sym),
@@ -2182,13 +2195,13 @@ def _crc_update_function_gen(opt, sym):
     return out
 
 
-def _crc_finalize_function_gen(opt, sym):
+def _crc_finalize_function_gen(opt: Options, sym: SymbolTable) -> list[CodeGen | str]:
     """
     Return the code for the finalize function.
     """
     if _use_inline_crc_finalize(opt):
         return []
-    out = [
+    out: list[CodeGen | str] = [
         "",
         "",
         _crc_finalize_function_def(opt, sym),
@@ -2332,11 +2345,11 @@ def _crc_finalize_function_gen(opt, sym):
     return out
 
 
-def _crc_table_core_algorithm(opt, sym):
+def _crc_table_core_algorithm(opt: Options, sym: SymbolTable) -> CodeGen:
     """
     Return the core of the table-driven algorithm.
     """
-    out = []
+    out: list[CodeGen | str] = []
     out += [
         Conditional2(
             opt,
@@ -2354,11 +2367,11 @@ def _crc_table_core_algorithm(opt, sym):
     return CodeGen(opt, "", out)
 
 
-def _crc_table_core_algorithm_reflected(opt, sym):
+def _crc_table_core_algorithm_reflected(opt: Options, sym: SymbolTable) -> CodeGen:
     """
     Return the core loop of the table-driven algorithm, reflected variant.
     """
-    out = []
+    out: list[CodeGen | str] = []
     if opt.width is not None and opt.tbl_idx_width is not None and opt.width <= opt.tbl_idx_width:
         crc_xor_expr = "0"
     else:
@@ -2393,11 +2406,11 @@ def _crc_table_core_algorithm_reflected(opt, sym):
     return CodeGen(opt, "", out)
 
 
-def _crc_table_core_algorithm_nonreflected(opt, sym):
+def _crc_table_core_algorithm_nonreflected(opt: Options, sym: SymbolTable) -> CodeGen:
     """
     Return the core loop of the table-driven algorithm, non-reflected variant.
     """
-    out = []
+    out: list[CodeGen | str] = []
     if opt.width is None:
         crc_shifted_right = expr.Parenthesis(
             expr.Shr("crc", expr.Parenthesis(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width)))
@@ -2444,14 +2457,14 @@ def _crc_table_core_algorithm_nonreflected(opt, sym):
     return CodeGen(opt, "", out)
 
 
-def _crc_table_slice_by_algorithm(opt, sym):
+def _crc_table_slice_by_algorithm(opt: Options, sym: SymbolTable) -> CodeGen:
     """
     Return the body of the slice-by loop of the table-driven update function.
 
     The loop consumes opt.slice_by bytes at a time. It is emitted once for
     big-endian and once for little-endian hosts.
     """
-    update_be = []
+    update_be: list[str] = []
     for i in range(opt.slice_by // 4):
         vard = f"d{opt.slice_by // 4 - i}"
         for j in range(4):
@@ -2459,7 +2472,7 @@ def _crc_table_slice_by_algorithm(opt, sym):
             idx2 = expr.And(expr.Parenthesis(expr.Shr(vard, j * 8)), expr.Terminal(255, "0xffu")).simplify()
             update_be.append("crc_table[{0}][{1}]{2}".format(idx1, idx2, " ^" if idx1 < opt.slice_by - 1 else ";"))
 
-    update_le = []
+    update_le: list[str] = []
     for i in range(opt.slice_by // 4):
         vard = f"d{opt.slice_by // 4 - i}"
         for j in range(4):
@@ -2467,7 +2480,7 @@ def _crc_table_slice_by_algorithm(opt, sym):
             idx2 = expr.And(expr.Parenthesis(expr.Shr(vard, 24 - j * 8)), expr.Terminal(255, "0xffu")).simplify()
             update_le.append("crc_table[{0}][{1}]{2}".format(idx1, idx2, " ^" if idx1 < opt.slice_by - 1 else ";"))
 
-    out = [
+    out: list[CodeGen | str] = [
         "const uint32_t *d32 = (const uint32_t *)d;",
         f"while (data_len >= {sym.crc_slice_by})",
         "{",

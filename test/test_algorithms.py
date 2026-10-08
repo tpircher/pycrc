@@ -12,7 +12,7 @@ from pycrc.models import CrcModels
 LOGGER = logging.getLogger(__name__)
 
 
-def check_crc(algo, check_str, expected_crc=None):
+def check_crc(algo: Crc, check_str: str | bytes, expected_crc: int | None = None) -> None:
     """Check that all three algorithms agree and optionally match expected_crc."""
     res_bbb = algo.bit_by_bit(check_str)
     res_bbf = algo.bit_by_bit_fast(check_str)
@@ -29,7 +29,7 @@ def check_crc(algo, check_str, expected_crc=None):
     assert res_bbb == res_bbf == res_tbl
 
 
-def test_all_models_with_check_input():
+def test_all_models_with_check_input() -> None:
     """
     Test all models using the basic check sequence.
     """
@@ -46,7 +46,7 @@ def test_all_models_with_check_input():
         check_crc(algo, check_str, m["check"])
 
 
-def test_all_models_with_cornercase_input():
+def test_all_models_with_cornercase_input() -> None:
     """
     Use corner case input strings
     """
@@ -63,7 +63,7 @@ def test_all_models_with_cornercase_input():
             check_crc(algo, check_str)
 
 
-def test_other_models():
+def test_other_models() -> None:
     """
     Test random parameters.
     """
@@ -89,7 +89,7 @@ def test_other_models():
                             check_crc(algo, check_str)
 
 
-def test_all_algorithms_mask_xor_out():
+def test_all_algorithms_mask_xor_out() -> None:
     """
     All algorithms must return a value within the configured width, even if
     xor_out has bits set above the width.
@@ -101,7 +101,7 @@ def test_all_algorithms_mask_xor_out():
             assert res == res & algo.mask
 
 
-def test_table_driven_rejects_other_index_widths():
+def test_table_driven_rejects_other_index_widths() -> None:
     """
     The Python table_driven() implementation only supports an index width of
     8 bits and must fail cleanly for other widths.
@@ -112,7 +112,7 @@ def test_table_driven_rejects_other_index_widths():
             algo.table_driven("123456789")
 
 
-def test_incremental_bit_by_bit_fast():
+def test_incremental_bit_by_bit_fast() -> None:
     """
     Feeding the data in chunks through bit_by_bit_fast_update() must give the
     same result as passing it all at once.

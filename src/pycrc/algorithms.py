@@ -63,9 +63,33 @@ from pycrc.models import CrcModels, CrcParams
 BytesLike: TypeAlias = str | bytes | bytearray
 
 
+def _require_int(name: str, value: object, minimum: int = 0) -> int:
+    """
+    Return *value* if it is an integer greater or equal to *minimum*.
+
+    Booleans are rejected even though they are integers in Python, because
+    passing one where a numeric parameter is expected is almost certainly a
+    mistake.
+    """
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise ValueError(f"{name} must be an integer >= {minimum}, got {value!r}")
+    return value
+
+
+def _coerce_bool(name: str, value: object) -> bool:
+    """Return *value* as a bool, rejecting values that are not bool/int."""
+    if not isinstance(value, (bool, int)):
+        raise ValueError(f"{name} must be a boolean, got {value!r}")
+    return bool(value)
+
+
 class Crc:
     """
     A base class for CRC routines.
+
+    The configuration attributes (width, poly, reflect_in, ...) are set once by
+    the constructor and must not be modified afterwards; changing them would
+    leave the cached lookup table and the derived masks inconsistent.
     """
 
     def __init__(
@@ -89,18 +113,20 @@ class Crc:
             xor_in
             reflect_out
             xor_out
+
+        Raises ValueError if a parameter has an unsuitable type or value.
         """
 
-        self.width: int = width
-        self.poly: int = poly
-        self.reflect_in: bool = reflect_in
-        self.xor_in: int = xor_in
-        self.reflect_out: bool = reflect_out
-        self.xor_out: int = xor_out
-        self.slice_by: int = slice_by
+        self.width: int = _require_int("width", width, 1)
+        self.poly: int = _require_int("poly", poly)
+        self.reflect_in: bool = _coerce_bool("reflect_in", reflect_in)
+        self.xor_in: int = _require_int("xor_in", xor_in)
+        self.reflect_out: bool = _coerce_bool("reflect_out", reflect_out)
+        self.xor_out: int = _require_int("xor_out", xor_out)
+        self.slice_by: int = _require_int("slice_by", slice_by, 1)
         if table_idx_width is None:
             table_idx_width = 8
-        self.tbl_idx_width: int = table_idx_width
+        self.tbl_idx_width: int = _require_int("table_idx_width", table_idx_width, 1)
 
         self.msb_mask: int = 0x1 << (self.width - 1)
         self.mask: int = ((self.msb_mask - 1) << 1) | 1
@@ -117,6 +143,12 @@ class Crc:
         # State used by the incremental update()/digest() API. None means that
         # no computation is in progress.
         self._register: int | None = None
+
+    def __repr__(self) -> str:
+        return (
+            f"Crc(width={self.width}, poly={self.poly:#x}, reflect_in={self.reflect_in}, "
+            f"xor_in={self.xor_in:#x}, reflect_out={self.reflect_out}, xor_out={self.xor_out:#x})"
+        )
 
     @classmethod
     def from_params(cls, params: CrcParams) -> Crc:

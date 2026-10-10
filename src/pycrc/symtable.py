@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from pycrc.algorithms import Crc
 
@@ -260,17 +260,25 @@ def _get_init_value(opt: Options) -> str | None:
     algorithm and to the given options.
     If no default option is given for a given parameter, value in the cfg_t
     structure must be used.
+
+    The init value only depends on a subset of the model parameters (for
+    example the bit-by-bit init value does not depend on the reflection
+    flags). Crc() still requires a fully defined model, so the parameters the
+    init value does not depend on are passed as neutral placeholders; they
+    cannot influence the result. Parameters the init value does depend on are
+    checked above and cause the value to be taken from cfg at run time.
     """
     if opt.algorithm == opt.algo_bit_by_bit:
         if opt.xor_in is None or opt.width is None or opt.poly is None:
             return None
+        # crc.nondirect_init depends only on width, poly and xor_in.
         crc = Crc(
             width=opt.width,
             poly=opt.poly,
-            reflect_in=cast(bool, opt.reflect_in),
+            reflect_in=opt.reflect_in if opt.reflect_in is not None else False,
             xor_in=opt.xor_in,
-            reflect_out=cast(bool, opt.reflect_out),
-            xor_out=cast(int, opt.xor_out),
+            reflect_out=False,
+            xor_out=0,
             table_idx_width=opt.tbl_idx_width,
         )
         init = crc.nondirect_init
@@ -282,13 +290,15 @@ def _get_init_value(opt: Options) -> str | None:
         if opt.reflect_in is None or opt.xor_in is None or opt.width is None:
             return None
         poly = 0 if opt.poly is None else opt.poly
+        # The table-driven init value depends only on width, reflect_in and
+        # xor_in.
         crc = Crc(
             width=opt.width,
             poly=poly,
             reflect_in=opt.reflect_in,
             xor_in=opt.xor_in,
-            reflect_out=cast(bool, opt.reflect_out),
-            xor_out=cast(int, opt.xor_out),
+            reflect_out=False,
+            xor_out=0,
             table_idx_width=opt.tbl_idx_width,
         )
         init = crc.reflect(crc.direct_init, opt.width) if opt.reflect_in else crc.direct_init

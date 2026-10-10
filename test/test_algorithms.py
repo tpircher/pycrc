@@ -78,3 +78,23 @@ def test_explicit_encoding() -> None:
     assert algo.bit_by_bit_fast(text) == algo.bit_by_bit_fast(text.encode("utf-8"))
     assert algo.bit_by_bit_fast(text, encoding="latin-1") == algo.bit_by_bit_fast(text.encode("latin-1"))
     assert algo.table_driven(text, encoding="latin-1") == algo.bit_by_bit_fast(text.encode("latin-1"))
+
+
+def test_constructor_validation() -> None:
+    """Unsuitable constructor arguments must raise ValueError."""
+    with pytest.raises(ValueError):
+        Crc(width=0, poly=0x07, reflect_in=False, xor_in=0, reflect_out=False, xor_out=0)
+    with pytest.raises(ValueError):
+        Crc(width=8, poly=0x07, reflect_in=False, xor_in=0, reflect_out=False, xor_out=0, slice_by=0)
+    with pytest.raises(ValueError):
+        Crc(width=8, poly=0x07, reflect_in=False, xor_in=0, reflect_out=False, xor_out=0, table_idx_width=0)
+    with pytest.raises(ValueError):
+        Crc(width=8, poly=0x07, reflect_in="no", xor_in=0, reflect_out=False, xor_out=0)  # type: ignore[arg-type]
+
+
+def test_repr() -> None:
+    """repr() must show the model parameters."""
+    text = repr(Crc.from_model("crc-32"))
+    assert "width=32" in text
+    assert "poly=0x4c11db7" in text
+    assert "reflect_out=True" in text

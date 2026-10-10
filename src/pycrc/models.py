@@ -45,14 +45,58 @@ To print the parameters of a particular model:
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, fields
+from types import MappingProxyType
 from typing import Any
 
 
-class CrcModels:
+@dataclass(frozen=True)
+class CrcParams:
+    """
+    The parameters of a CRC model (the Rocksoft model).
+
+    Instances are immutable and may be used wherever a model's parameters are
+    needed. For convenience they also support dictionary-style access, e.g.
+    ``params["width"]`` and ``dict(params)``.
+    """
+
+    name: str
+    width: int
+    poly: int
+    reflect_in: bool
+    xor_in: int
+    reflect_out: bool
+    xor_out: int
+    check: int
+
+    def keys(self) -> tuple[str, ...]:
+        """Return the names of the model parameters."""
+        return tuple(field.name for field in fields(self))
+
+    def __contains__(self, key: object) -> bool:
+        """Return True if the named model parameter exists."""
+        return isinstance(key, str) and key in self.keys()
+
+    def __getitem__(self, key: str) -> Any:
+        """Return the named model parameter, or raise KeyError."""
+        if key not in self.keys():
+            raise KeyError(key)
+        return getattr(self, key)
+
+
+class CrcModels(Mapping[str, CrcParams]):
     """
     CRC Models.
 
-    All models are defined as constant class variables.
+    All models are defined as constant class variables. The class behaves like
+    a read-only mapping from model name to :class:`CrcParams`, so models can be
+    looked up by name in constant time:
+
+        models = CrcModels()
+        params = models["crc-32"]
+        if "crc-32" in models:
+            ...
     """
 
     _models: list[dict[str, Any]] = []
@@ -371,24 +415,41 @@ class CrcModels:
     )
 
     # Make the collection immutable so that callers cannot accidentally add
-    # or remove model definitions. Individual dicts are copied by get_params().
-    models: tuple[dict[str, Any], ...] = tuple(_models)
+    # or remove model definitions. The lookup table is built once, so name
+    # lookups are O(1).
+    models: tuple[CrcParams, ...] = tuple(CrcParams(**definition) for definition in _models)
+    _by_name: Mapping[str, CrcParams] = MappingProxyType({model.name: model for model in models})
+
+    def __getitem__(self, name: str) -> CrcParams:
+        """Return the model with the given (case-insensitive) name."""
+        return self._by_name[name.lower()]
+
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the names of the supported models."""
+        return iter(self._by_name)
+
+    def __len__(self) -> int:
+        """Return the number of supported models."""
+        return len(self._by_name)
 
     def names(self) -> list[str]:
-        """
-        Return the list of supported CRC models.
-        """
-        return [model["name"] for model in self.models]
+        """Return the list of supported CRC models."""
+        return list(self._by_name)
 
     def get_params(self, model: str) -> dict[str, Any] | None:
         """
-        Return the parameters of a given model.
+        Return a copy of the parameters of a given model, or None if it is
+        unknown.
 
-        A copy of the model is returned so that callers cannot accidentally
-        modify the (constant) model definitions.
+        This is the legacy interface: it returns a plain, mutable ``dict`` so
+        that existing callers can keep modifying the result without affecting
+        the (immutable) model definitions. New code should prefer the
+        read-only mapping interface, i.e. ``models[model]`` or
+        ``models.get(model)``, which return an immutable :class:`CrcParams`.
+
+        The model name is matched case-insensitively.
         """
-        model = model.lower()
-        for i in self.models:
-            if i["name"] == model:
-                return dict(i)
-        return None
+        params = self._by_name.get(model.lower())
+        if params is None:
+            return None
+        return {field.name: getattr(params, field.name) for field in fields(params)}

@@ -43,9 +43,18 @@ This is an example use of the different algorithms:
     print("{0:#x}".format(crc.bit_by_bit("123456789")))
     print("{0:#x}".format(crc.bit_by_bit_fast("123456789")))
     print("{0:#x}".format(crc.table_driven("123456789")))
+
+A model can also be selected by name:
+
+    from pycrc.algorithms import Crc
+
+    crc = Crc.from_model("crc-32")
+    print("{0:#x}".format(crc.bit_by_bit_fast("123456789")))
 """
 
 from __future__ import annotations
+
+from pycrc.models import CrcModels, CrcParams
 
 
 class Crc:
@@ -99,6 +108,32 @@ class Crc:
             self.crc_shift = 0
 
         self.tbl: list[list[int]] = self.gen_table()
+
+    @classmethod
+    def from_params(cls, params: CrcParams) -> Crc:
+        """
+        Create a Crc object from a :class:`~pycrc.models.CrcParams` model.
+        """
+        return cls(
+            width=params.width,
+            poly=params.poly,
+            reflect_in=params.reflect_in,
+            xor_in=params.xor_in,
+            reflect_out=params.reflect_out,
+            xor_out=params.xor_out,
+        )
+
+    @classmethod
+    def from_model(cls, model: str) -> Crc:
+        """
+        Create a Crc object for a named model (e.g. "crc-32").
+
+        Raises ValueError if the model is unknown.
+        """
+        params = CrcModels().get(model)
+        if params is None:
+            raise ValueError(f"unknown CRC model {model!r}")
+        return cls.from_params(params)
 
     def __get_nondirect_init(self, init: int) -> int:
         """

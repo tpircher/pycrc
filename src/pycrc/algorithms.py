@@ -54,7 +54,13 @@ A model can also be selected by name:
 
 from __future__ import annotations
 
+from typing import TypeAlias
+
 from pycrc.models import CrcModels, CrcParams
+
+#: The input accepted by the CRC routines. Plain strings are encoded with the
+#: encoding passed to the respective routine (UTF-8 by default).
+BytesLike: TypeAlias = str | bytes | bytearray
 
 
 class Crc:
@@ -108,6 +114,9 @@ class Crc:
             self.crc_shift = 0
 
         self.tbl: list[list[int]] = self.gen_table()
+        # State used by the incremental update()/digest() API. None means that
+        # no computation is in progress.
+        self._register: int | None = None
 
     @classmethod
     def from_params(cls, params: CrcParams) -> Crc:
@@ -149,6 +158,18 @@ class Crc:
                 crc |= self.msb_mask
         return crc & self.mask
 
+    @staticmethod
+    def _as_bytes(data: BytesLike, encoding: str = "utf-8") -> bytes | bytearray:
+        """
+        Return *data* as a bytes-like object.
+
+        Strings are encoded using *encoding*; bytes and bytearrays are
+        returned unchanged.
+        """
+        if isinstance(data, str):
+            return bytearray(data, encoding)
+        return data
+
     def reflect(self, data: int, width: int) -> int:
         """
         reflect a data word, i.e. reverts the bit order.
@@ -160,18 +181,18 @@ class Crc:
             res = (res << 1) | (data & 0x01)
         return res
 
-    def bit_by_bit(self, in_data: str | bytes | bytearray) -> int:
+    def bit_by_bit(self, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
         Classic simple and slow CRC implementation.  This function iterates bit
         by bit over the augmented input message and returns the calculated CRC
         value at the end.
+
+        Strings are encoded using *encoding* (UTF-8 by default).
         """
-        # If the input data is a string, convert to bytes.
-        if isinstance(in_data, str):
-            in_data = bytearray(in_data, "utf-8")
+        data = self._as_bytes(in_data, encoding)
 
         reg = self.nondirect_init
-        for octet in in_data:
+        for octet in data:
             if self.reflect_in:
                 octet = self.reflect(octet, 8)
             for i in range(8):
@@ -190,7 +211,7 @@ class Crc:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-    def bit_by_bit_fast_update(self, reg: int, in_data: str | bytes | bytearray) -> int:
+    def bit_by_bit_fast_update(self, reg: int, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
         Update a CRC register with the bit-by-bit-fast algorithm and return
         the new register value.
@@ -198,12 +219,12 @@ class Crc:
         This is the incremental core of bit_by_bit_fast(): it does not apply
         the initial value, the output reflection or the final xor-out value, so
         it can be used to process data in chunks.
-        """
-        # If the input data is a string, convert to bytes.
-        if isinstance(in_data, str):
-            in_data = bytearray(in_data, "utf-8")
 
-        for octet in in_data:
+        Strings are encoded using *encoding* (UTF-8 by default).
+        """
+        data = self._as_bytes(in_data, encoding)
+
+        for octet in data:
             if self.reflect_in:
                 octet = self.reflect(octet, 8)
             for i in range(8):
@@ -216,13 +237,46 @@ class Crc:
             reg &= self.mask
         return reg
 
-    def bit_by_bit_fast(self, in_data: str | bytes | bytearray) -> int:
+    def bit_by_bit_fast(self, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
         This is a slightly modified version of the bit-by-bit algorithm: it
         does not need to loop over the augmented bits, i.e. the Width 0-bits
         which are appended to the input message in the bit-by-bit algorithm.
+
+        Strings are encoded using *encoding* (UTF-8 by default).
         """
-        reg = self.bit_by_bit_fast_update(self.direct_init, in_data)
+        reg = self.bit_by_bit_fast_update(self.direct_init, in_data, encoding)
+        if self.reflect_out:
+            reg = self.reflect(reg, self.width)
+        return (reg ^ self.xor_out) & self.mask
+
+    def reset(self) -> None:
+        """
+        Discard the state of any in-progress incremental computation.
+        """
+        self._register = None
+
+    def update(self, data: BytesLike, encoding: str = "utf-8") -> None:
+        """
+        Feed more data into an incremental bit-by-bit-fast computation.
+
+        The result is obtained with :meth:`digest`. The computation is
+        initialised implicitly on the first call. Strings are encoded using
+        *encoding* (UTF-8 by default).
+        """
+        if self._register is None:
+            self._register = self.direct_init
+        self._register = self.bit_by_bit_fast_update(self._register, data, encoding)
+
+    def digest(self) -> int:
+        """
+        Return the CRC of all data fed to :meth:`update` so far.
+
+        The value is identical to calling :meth:`bit_by_bit_fast` on the
+        concatenation of all the chunks. If no data has been fed, the CRC of
+        the empty message is returned.
+        """
+        reg = self.direct_init if self._register is None else self._register
         if self.reflect_out:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
@@ -254,21 +308,21 @@ class Crc:
                 tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xFF]
         return tbl
 
-    def table_driven(self, in_data: str | bytes | bytearray) -> int:
+    def table_driven(self, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
         The Standard table_driven CRC algorithm.
+
+        Strings are encoded using *encoding* (UTF-8 by default).
         """
 
-        # If the input data is a string, convert to bytes.
-        if isinstance(in_data, str):
-            in_data = bytearray(in_data, "utf-8")
+        data = self._as_bytes(in_data, encoding)
 
         if self.tbl_idx_width != 8:
             raise ValueError("table_driven() only supports a table index width of 8 bits")
 
         if not self.reflect_in:
             reg = self.direct_init << self.crc_shift
-            for octet in in_data:
+            for octet in data:
                 tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xFF
                 reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^ (self.tbl[0][tblidx] << self.crc_shift)) & (
                     self.mask << self.crc_shift
@@ -276,7 +330,7 @@ class Crc:
             reg = reg >> self.crc_shift
         else:
             reg = self.reflect(self.direct_init, self.width)
-            for octet in in_data:
+            for octet in data:
                 tblidx = (reg ^ octet) & 0xFF
                 reg = ((reg >> self.tbl_idx_width) ^ self.tbl[0][tblidx]) & self.mask
             reg = self.reflect(reg, self.width) & self.mask

@@ -48,3 +48,33 @@ def test_legacy_get_params_returns_a_copy() -> None:
     assert legacy is not None
     legacy["xor_in"] = 0x12345678
     assert models["crc-32"].xor_in != 0x12345678
+
+
+def test_streaming_update_digest() -> None:
+    """Streaming update()/digest() must match the one-shot bit_by_bit_fast()."""
+    check_str = "123456789"
+    for m in CrcModels().models:
+        algo = Crc.from_params(m)
+        for size in (1, 3, 7, len(check_str)):
+            algo.reset()
+            for i in range(0, len(check_str), size):
+                algo.update(check_str[i : i + size])
+            assert algo.digest() == algo.bit_by_bit_fast(check_str)
+
+
+def test_digest_empty() -> None:
+    """digest() without update() equals the CRC of the empty message."""
+    for m in CrcModels().models:
+        algo = Crc.from_params(m)
+        assert algo.digest() == algo.bit_by_bit_fast(b"")
+        algo.update(b"")
+        assert algo.digest() == algo.bit_by_bit_fast(b"")
+
+
+def test_explicit_encoding() -> None:
+    """Strings are encoded with the requested encoding."""
+    algo = Crc.from_model("crc-32")
+    text = "Grüße"
+    assert algo.bit_by_bit_fast(text) == algo.bit_by_bit_fast(text.encode("utf-8"))
+    assert algo.bit_by_bit_fast(text, encoding="latin-1") == algo.bit_by_bit_fast(text.encode("latin-1"))
+    assert algo.table_driven(text, encoding="latin-1") == algo.bit_by_bit_fast(text.encode("latin-1"))

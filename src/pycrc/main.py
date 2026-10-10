@@ -60,6 +60,27 @@ def print_parameters(opt: Options) -> str:
     return str(cg.ParamBlock(opt, ""))
 
 
+def _get_crc(opt: Options) -> Crc:
+    """
+    Return a Crc object built from the fully defined options.
+    """
+    assert opt.width is not None
+    assert opt.poly is not None
+    assert opt.reflect_in is not None
+    assert opt.xor_in is not None
+    assert opt.reflect_out is not None
+    assert opt.xor_out is not None
+    return Crc(
+        width=opt.width,
+        poly=opt.poly,
+        reflect_in=opt.reflect_in,
+        xor_in=opt.xor_in,
+        reflect_out=opt.reflect_out,
+        xor_out=opt.xor_out,
+        table_idx_width=opt.tbl_idx_width,
+    )
+
+
 def check_string(opt: Options) -> int | None:
     """
     Return the calculated CRC sum of a string.
@@ -71,21 +92,7 @@ def check_string(opt: Options) -> int | None:
     if opt.algorithm == 0:
         opt.algorithm = opt.algo_bit_by_bit | opt.algo_bit_by_bit_fast | opt.algo_table_driven
 
-    assert opt.width is not None
-    assert opt.poly is not None
-    assert opt.reflect_in is not None
-    assert opt.xor_in is not None
-    assert opt.reflect_out is not None
-    assert opt.xor_out is not None
-    alg = Crc(
-        width=opt.width,
-        poly=opt.poly,
-        reflect_in=opt.reflect_in,
-        xor_in=opt.xor_in,
-        reflect_out=opt.reflect_out,
-        xor_out=opt.xor_out,
-        table_idx_width=opt.tbl_idx_width,
-    )
+    alg = _get_crc(opt)
 
     crc: int | None = None
     if opt.algorithm & opt.algo_bit_by_bit:
@@ -144,41 +151,19 @@ def check_file(opt: Options) -> int:
         sys.stderr.write(f"{progname:s}: error: undefined parameters\n")
         sys.exit(1)
 
-    assert opt.width is not None
-    assert opt.poly is not None
-    assert opt.reflect_in is not None
-    assert opt.xor_in is not None
-    assert opt.reflect_out is not None
-    assert opt.xor_out is not None
-    alg = Crc(
-        width=opt.width,
-        poly=opt.poly,
-        reflect_in=opt.reflect_in,
-        xor_in=opt.xor_in,
-        reflect_out=opt.reflect_out,
-        xor_out=opt.xor_out,
-        table_idx_width=opt.tbl_idx_width,
-    )
-
-    # Always use the xor_in value unreflected
-    # As in the rocksoft reference implementation
-    register = opt.xor_in
-
     assert opt.check_file is not None
+    alg = _get_crc(opt)
     try:
         with open(opt.check_file, "rb") as f:
             check_bytes = bytearray(f.read(4096))
             while check_bytes != b"":
-                register = alg.bit_by_bit_fast_update(register, check_bytes)
+                alg.update(check_bytes)
                 check_bytes = bytearray(f.read(4096))
     except OSError:
         sys.stderr.write(f"{progname:s}: error: can't open file {opt.check_file:s}\n")
         sys.exit(1)
 
-    if opt.reflect_out:
-        register = alg.reflect(register, opt.width)
-    register = register ^ opt.xor_out
-    return register
+    return alg.digest()
 
 
 def write_file(filename: str, out_str: str) -> None:

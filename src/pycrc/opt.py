@@ -78,8 +78,8 @@ class Options:
         self.xor_in: int | None = None
         self.reflect_out: bool | None = None
         self.xor_out: int | None = None
-        self.tbl_idx_width: int = 8
-        self.tbl_width: int = 1 << self.tbl_idx_width
+        self.table_idx_width: int = 8
+        self.tbl_width: int = 1 << self.table_idx_width
         self.slice_by: int = 1
         self.verbose: bool = False
         self.check_string: str | bytes | bytearray = "123456789"
@@ -95,6 +95,17 @@ class Options:
         self.check_file: str | None = None
         self.c_std: str | None = None
         self.undefined_crc_parameters: bool = False
+
+    @property
+    def tbl_idx_width(self) -> int:
+        """Deprecated alias for :attr:`table_idx_width`."""
+        return self.table_idx_width
+
+    @tbl_idx_width.setter
+    def tbl_idx_width(self, value: int) -> None:
+        """Deprecated alias for :attr:`table_idx_width`."""
+        self.table_idx_width = value
+        self.tbl_width = 1 << value
 
     def parse(self, argv: list[str] | None = None) -> None:
         """
@@ -287,7 +298,7 @@ of the following parameters:
         """
         if options.table_idx_width is not None:
             if options.table_idx_width in {1, 2, 4, 8}:
-                self.tbl_idx_width = options.table_idx_width
+                self.table_idx_width = options.table_idx_width
                 self.tbl_width = 1 << options.table_idx_width
             else:
                 self.__error(f"unsupported table-idx-width {options.table_idx_width}")
@@ -336,7 +347,7 @@ of the following parameters:
                 self.__error(f"unsupported slice-by {options.slice_by}")
             if self.undefined_crc_parameters:
                 self.__error("slice-by is only implemented for fully defined models")
-            if self.tbl_idx_width != 8:
+            if self.table_idx_width != 8:
                 self.__error("slice-by is only implemented for table-idx-width=8")
             # FIXME tp: Fix corner cases and disable the following tests
             assert self.width is not None
@@ -421,10 +432,10 @@ of the following parameters:
             elif self.algorithm not in {self.algo_bit_by_bit, self.algo_bit_by_bit_fast, self.algo_table_driven}:
                 self.__error("select an algorithm to be used in the generated file. (Hint: use the --algorithm option.)")
         else:
-            if self.tbl_idx_width != 8:
+            if self.table_idx_width != 8:
                 self.__warning("reverting to Table Index Width = 8 for internal CRC calculation")
-                self.tbl_idx_width = 8
-                self.tbl_width = 1 << self.tbl_idx_width
+                self.table_idx_width = 8
+                self.tbl_width = 1 << self.table_idx_width
         if op_count == 0:
             self.action = self.action_check_str
         if op_count > 1:

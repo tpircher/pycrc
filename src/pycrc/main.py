@@ -77,7 +77,7 @@ def _get_crc(opt: Options) -> Crc:
         xor_in=opt.xor_in,
         reflect_out=opt.reflect_out,
         xor_out=opt.xor_out,
-        table_idx_width=opt.tbl_idx_width,
+        table_idx_width=opt.table_idx_width,
     )
 
 

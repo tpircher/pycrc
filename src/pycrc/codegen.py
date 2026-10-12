@@ -2372,12 +2372,12 @@ def _crc_table_core_algorithm_reflected(opt: Options, sym: SymbolTable) -> CodeG
     Return the core loop of the table-driven algorithm, reflected variant.
     """
     out: list[CodeGen | str] = []
-    if opt.width is not None and opt.tbl_idx_width is not None and opt.width <= opt.tbl_idx_width:
+    if opt.width is not None and opt.table_idx_width is not None and opt.width <= opt.table_idx_width:
         crc_xor_expr = "0"
     else:
         crc_xor_expr = f"(crc >> {sym.cfg_table_idx_width})"
 
-    if opt.tbl_idx_width == 8:
+    if opt.table_idx_width == 8:
         crc_lookup = "crc_table[0][tbl_idx]" if opt.slice_by > 1 else "crc_table[tbl_idx]"
         crc_exp = expr.And(
             expr.Parenthesis(expr.Xor(crc_lookup, expr.Parenthesis(expr.Shr("crc", sym.cfg_table_idx_width)))), sym.cfg_mask
@@ -2398,7 +2398,7 @@ def _crc_table_core_algorithm_reflected(opt: Options, sym: SymbolTable) -> CodeG
         ]
     else:
         crc_lookup = f"crc_table[tbl_idx & {sym.crc_table_mask}]"
-        for i in range(8 // opt.tbl_idx_width):
+        for i in range(8 // opt.table_idx_width):
             idx = expr.Xor(
                 "crc", expr.Parenthesis(expr.Shr("*d", expr.Parenthesis(expr.Mul(i, sym.cfg_table_idx_width))))
             ).simplify()
@@ -2416,21 +2416,21 @@ def _crc_table_core_algorithm_nonreflected(opt: Options, sym: SymbolTable) -> Co
             expr.Shr("crc", expr.Parenthesis(expr.Sub(sym.cfg_width, sym.cfg_table_idx_width)))
         ).simplify()
     elif opt.width < 8:
-        shift_val = opt.width - opt.tbl_idx_width
+        shift_val = opt.width - opt.table_idx_width
         if shift_val < 0:
             crc_shifted_right = expr.Parenthesis(expr.Shl("crc", -shift_val)).simplify()
         else:
             crc_shifted_right = expr.Parenthesis(expr.Shr("crc", shift_val)).simplify()
     else:
-        shift_val = opt.width - opt.tbl_idx_width
+        shift_val = opt.width - opt.table_idx_width
         crc_shifted_right = expr.Parenthesis(expr.Shr("crc", shift_val)).simplify()
 
-    if opt.width is not None and opt.tbl_idx_width is not None and opt.width <= opt.tbl_idx_width:
+    if opt.width is not None and opt.table_idx_width is not None and opt.width <= opt.table_idx_width:
         crc_xor_expr = "0"
     else:
         crc_xor_expr = f"(crc << {sym.cfg_table_idx_width})"
 
-    if opt.tbl_idx_width == 8:
+    if opt.table_idx_width == 8:
         crc_lookup = "crc_table[0][tbl_idx]" if opt.slice_by > 1 else "crc_table[tbl_idx]"
         out += [
             Conditional2(
@@ -2448,8 +2448,8 @@ def _crc_table_core_algorithm_nonreflected(opt: Options, sym: SymbolTable) -> Co
         ]
     else:
         crc_lookup = f"crc_table[tbl_idx & {sym.crc_table_mask}]"
-        for i in range(8 // opt.tbl_idx_width):
-            str_idx = f"{8 - (i + 1) * opt.tbl_idx_width:d}"
+        for i in range(8 // opt.table_idx_width):
+            str_idx = f"{8 - (i + 1) * opt.table_idx_width:d}"
             out += [
                 "tbl_idx = {0};".format(expr.Xor(crc_shifted_right, expr.Parenthesis(expr.Shr("*d", str_idx)))),
                 f"crc = {expr.Xor(crc_lookup, crc_xor_expr).simplify()};",

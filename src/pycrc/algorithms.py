@@ -115,6 +115,11 @@ class Crc:
             xor_out
 
         Raises ValueError if a parameter has an unsuitable type or value.
+
+        The table_idx_width parameter selects the size of the lookup table
+        (the Python table_driven() implementation only supports 8). The
+        slice_by parameter is only used by the generated C code; it does not
+        affect the result of the Python algorithms.
         """
 
         self.width: int = _require_int("width", width, 1)
@@ -126,11 +131,11 @@ class Crc:
         self.slice_by: int = _require_int("slice_by", slice_by, 1)
         if table_idx_width is None:
             table_idx_width = 8
-        self.tbl_idx_width: int = _require_int("table_idx_width", table_idx_width, 1)
+        self.table_idx_width: int = _require_int("table_idx_width", table_idx_width, 1)
 
         self.msb_mask: int = 0x1 << (self.width - 1)
         self.mask: int = ((self.msb_mask - 1) << 1) | 1
-        self.tbl_width: int = 1 << self.tbl_idx_width
+        self.tbl_width: int = 1 << self.table_idx_width
 
         self.direct_init: int = self.xor_in
         self.nondirect_init: int = self.__get_nondirect_init(self.xor_in)
@@ -139,7 +144,7 @@ class Crc:
         else:
             self.crc_shift = 0
 
-        self.tbl: list[list[int]] = self.gen_table()
+        self.tbl: list[list[int]] = self._gen_table()
         # State used by the incremental update()/digest() API. None means that
         # no computation is in progress.
         self._register: int | None = None
@@ -149,6 +154,23 @@ class Crc:
             f"Crc(width={self.width}, poly={self.poly:#x}, reflect_in={self.reflect_in}, "
             f"xor_in={self.xor_in:#x}, reflect_out={self.reflect_out}, xor_out={self.xor_out:#x})"
         )
+
+    @property
+    def tbl_idx_width(self) -> int:
+        """Deprecated alias for :attr:`table_idx_width`."""
+        return self.table_idx_width
+
+    @tbl_idx_width.setter
+    def tbl_idx_width(self, value: int) -> None:
+        """Deprecated alias for :attr:`table_idx_width`."""
+        self.table_idx_width = value
+        self.tbl_width = 1 << value
+        self.tbl = self._gen_table()
+
+    @property
+    def table(self) -> list[list[int]]:
+        """The cached lookup table used by the table-driven algorithm."""
+        return self.tbl
 
     @classmethod
     def from_params(cls, params: CrcParams) -> Crc:
@@ -202,7 +224,8 @@ class Crc:
             return bytearray(data, encoding)
         return data
 
-    def reflect(self, data: int, width: int) -> int:
+    @staticmethod
+    def reflect(data: int, width: int) -> int:
         """
         reflect a data word, i.e. reverts the bit order.
         """
@@ -313,21 +336,23 @@ class Crc:
             reg = self.reflect(reg, self.width)
         return (reg ^ self.xor_out) & self.mask
 
-    def gen_table(self) -> list[list[int]]:
+    def _gen_table(self) -> list[list[int]]:
         """
-        This function generates the CRC table used for the table_driven CRC
-        algorithm.  The Python version cannot handle tables of an index width
-        other than 8.  See the generated C code for tables with different sizes
-        instead.
+        Generate the CRC table used for the table_driven CRC algorithm.
+
+        This is an internal helper; use the read-only :attr:`table` property
+        instead. The Python implementation only supports a table index width of
+        8 (see table_driven()); the table is generated for the requested index
+        width regardless.
         """
-        table_length = 1 << self.tbl_idx_width
+        table_length = 1 << self.table_idx_width
         tbl = [[0 for i in range(table_length)] for j in range(self.slice_by)]
         for i in range(table_length):
             reg = i
             if self.reflect_in:
-                reg = self.reflect(reg, self.tbl_idx_width)
-            reg = reg << (self.width - self.tbl_idx_width + self.crc_shift)
-            for _ in range(self.tbl_idx_width):
+                reg = self.reflect(reg, self.table_idx_width)
+            reg = reg << (self.width - self.table_idx_width + self.crc_shift)
+            for _ in range(self.table_idx_width):
                 reg = (
                     (reg << 1) ^ (self.poly << self.crc_shift) if reg & (self.msb_mask << self.crc_shift) != 0 else (reg << 1)
                 )
@@ -340,6 +365,10 @@ class Crc:
                 tbl[j][i] = (tbl[j - 1][i] >> 8) ^ tbl[0][tbl[j - 1][i] & 0xFF]
         return tbl
 
+    def gen_table(self) -> list[list[int]]:
+        """Deprecated alias for :meth:`_gen_table`; use :attr:`table`."""
+        return self._gen_table()
+
     def table_driven(self, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
         The Standard table_driven CRC algorithm.
@@ -349,14 +378,14 @@ class Crc:
 
         data = self._as_bytes(in_data, encoding)
 
-        if self.tbl_idx_width != 8:
+        if self.table_idx_width != 8:
             raise ValueError("table_driven() only supports a table index width of 8 bits")
 
         if not self.reflect_in:
             reg = self.direct_init << self.crc_shift
             for octet in data:
-                tblidx = ((reg >> (self.width - self.tbl_idx_width + self.crc_shift)) ^ octet) & 0xFF
-                reg = ((reg << (self.tbl_idx_width - self.crc_shift)) ^ (self.tbl[0][tblidx] << self.crc_shift)) & (
+                tblidx = ((reg >> (self.width - self.table_idx_width + self.crc_shift)) ^ octet) & 0xFF
+                reg = ((reg << (self.table_idx_width - self.crc_shift)) ^ (self.tbl[0][tblidx] << self.crc_shift)) & (
                     self.mask << self.crc_shift
                 )
             reg = reg >> self.crc_shift
@@ -364,7 +393,7 @@ class Crc:
             reg = self.reflect(self.direct_init, self.width)
             for octet in data:
                 tblidx = (reg ^ octet) & 0xFF
-                reg = ((reg >> self.tbl_idx_width) ^ self.tbl[0][tblidx]) & self.mask
+                reg = ((reg >> self.table_idx_width) ^ self.tbl[0][tblidx]) & self.mask
             reg = self.reflect(reg, self.width) & self.mask
 
         if self.reflect_out:

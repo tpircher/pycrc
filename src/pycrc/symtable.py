@@ -74,8 +74,8 @@ class SymbolTable:
         self.crc_reflect_out = _pretty_bool(self._opt.reflect_out)
         self.crc_xor_out = _pretty_hex(self._opt.xor_out, self._opt.width)
         self.crc_slice_by = _pretty_str(self._opt.slice_by)
-        self.crc_table_idx_width = str(self._opt.tbl_idx_width)
-        self.crc_table_width = _pretty_str(1 << self._opt.tbl_idx_width)
+        self.crc_table_idx_width = str(self._opt.table_idx_width)
+        self.crc_table_width = _pretty_str(1 << self._opt.table_idx_width)
         self.crc_table_mask = _pretty_hex(self._opt.tbl_width - 1, 8)
         self.crc_mask = _pretty_hex(self._opt.mask, self._opt.width)
         self.crc_msb_mask = _pretty_hex(self._opt.msb_mask, self._opt.width)
@@ -87,7 +87,9 @@ class SymbolTable:
         self.cfg_xor_in = self.crc_xor_in if self._opt.xor_in is not None else "cfg->xor_in"
         self.cfg_reflect_out = self.crc_reflect_out if self._opt.reflect_out is not None else "cfg->reflect_out"
         self.cfg_xor_out = self.crc_xor_out if self._opt.xor_out is not None else "cfg->xor_out"
-        self.cfg_table_idx_width = self.crc_table_idx_width if self._opt.tbl_idx_width is not None else "cfg->table_idx_width"
+        self.cfg_table_idx_width = (
+            self.crc_table_idx_width if self._opt.table_idx_width is not None else "cfg->table_idx_width"
+        )
         self.cfg_table_width = self.crc_table_width if self._opt.tbl_width is not None else "cfg->table_width"
         self.cfg_mask = self.crc_mask if self._opt.mask is not None else "cfg->crc_mask"
         self.cfg_msb_mask = self.crc_msb_mask if self._opt.msb_mask is not None else "cfg->msb_mask"
@@ -341,10 +343,10 @@ def _get_table_init(opt: Options) -> str:  # TODO: change to return a list
         xor_in=0,
         reflect_out=False,
         xor_out=0,  # set unimportant variables to known values
-        table_idx_width=opt.tbl_idx_width,
+        table_idx_width=opt.table_idx_width,
         slice_by=opt.slice_by,
     )
-    crc_tbl = crc.gen_table()
+    crc_tbl = crc.table
     if opt.width > 32:
         values_per_line = 4
     elif opt.width >= 16:

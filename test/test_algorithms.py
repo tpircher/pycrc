@@ -98,3 +98,17 @@ def test_repr() -> None:
     assert "width=32" in text
     assert "poly=0x4c11db7" in text
     assert "reflect_out=True" in text
+
+
+def test_table_property_and_alias() -> None:
+    """The table is exposed read-only and tbl_idx_width remains an alias."""
+    algo = Crc.from_model("crc-32")
+    assert algo.table is algo.tbl
+    assert algo.gen_table() == algo.table
+    assert algo.tbl_idx_width == algo.table_idx_width == 8
+
+
+def test_reflect_is_static() -> None:
+    """reflect() can be called without an instance."""
+    assert Crc.reflect(0x80, 8) == 0x01
+    assert Crc.from_model("crc-32").reflect(0x01, 8) == 0x80

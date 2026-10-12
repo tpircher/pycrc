@@ -10,8 +10,6 @@ alongside the tests in ``test_algorithms.py``.
 
 import logging
 
-import pytest
-
 from pycrc.algorithms import Crc
 from pycrc.models import CrcModels
 
@@ -105,17 +103,6 @@ def test_all_algorithms_mask_xor_out() -> None:
         algo = Crc(width=8, poly=0x07, reflect_in=reflect, xor_in=0, reflect_out=reflect, xor_out=xor_out)
         for res in (algo.bit_by_bit("123456789"), algo.bit_by_bit_fast("123456789"), algo.table_driven("123456789")):
             assert res == res & algo.mask
-
-
-def test_table_driven_rejects_other_index_widths() -> None:
-    """
-    The Python table_driven() implementation only supports an index width of
-    8 bits and must fail cleanly for other widths.
-    """
-    for tbl_idx_width in (1, 2, 4):
-        algo = Crc(width=8, poly=0x07, reflect_in=False, xor_in=0, reflect_out=False, xor_out=0, table_idx_width=tbl_idx_width)
-        with pytest.raises(ValueError):
-            algo.table_driven("123456789")
 
 
 def test_incremental_bit_by_bit_fast() -> None:

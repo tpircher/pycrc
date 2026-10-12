@@ -116,10 +116,11 @@ class Crc:
 
         Raises ValueError if a parameter has an unsuitable type or value.
 
-        The table_idx_width parameter selects the size of the lookup table
-        (the Python table_driven() implementation only supports 8). The
-        slice_by parameter is only used by the generated C code; it does not
-        affect the result of the Python algorithms.
+        The table_idx_width parameter selects the size of the lookup table; any
+        value that divides 8 (i.e. 1, 2, 4 or 8) is supported by the Python
+        table_driven() implementation. The slice_by parameter is only used by
+        the generated C code; it does not affect the result of the Python
+        algorithms.
         """
 
         self.width: int = _require_int("width", width, 1)
@@ -132,6 +133,8 @@ class Crc:
         if table_idx_width is None:
             table_idx_width = 8
         self.table_idx_width: int = _require_int("table_idx_width", table_idx_width, 1)
+        if 8 % self.table_idx_width != 0:
+            raise ValueError(f"table_idx_width must divide 8, got {self.table_idx_width}")
 
         self.msb_mask: int = 0x1 << (self.width - 1)
         self.mask: int = ((self.msb_mask - 1) << 1) | 1
@@ -341,9 +344,7 @@ class Crc:
         Generate the CRC table used for the table_driven CRC algorithm.
 
         This is an internal helper; use the read-only :attr:`table` property
-        instead. The Python implementation only supports a table index width of
-        8 (see table_driven()); the table is generated for the requested index
-        width regardless.
+        instead. The table is generated for the requested index width.
         """
         table_length = 1 << self.table_idx_width
         tbl = [[0 for i in range(table_length)] for j in range(self.slice_by)]
@@ -371,30 +372,34 @@ class Crc:
 
     def table_driven(self, in_data: BytesLike, encoding: str = "utf-8") -> int:
         """
-        The Standard table_driven CRC algorithm.
+        The standard table-driven CRC algorithm.
 
+        Any table index width that divides 8 (i.e. 1, 2, 4 or 8) is supported.
         Strings are encoded using *encoding* (UTF-8 by default).
         """
 
         data = self._as_bytes(in_data, encoding)
 
-        if self.table_idx_width != 8:
-            raise ValueError("table_driven() only supports a table index width of 8 bits")
+        idx_width = self.table_idx_width
+        table_mask = (1 << idx_width) - 1
+        table = self.tbl[0]
 
-        if not self.reflect_in:
-            reg = self.direct_init << self.crc_shift
-            for octet in data:
-                tblidx = ((reg >> (self.width - self.table_idx_width + self.crc_shift)) ^ octet) & 0xFF
-                reg = ((reg << (self.table_idx_width - self.crc_shift)) ^ (self.tbl[0][tblidx] << self.crc_shift)) & (
-                    self.mask << self.crc_shift
-                )
-            reg = reg >> self.crc_shift
-        else:
+        if self.reflect_in:
             reg = self.reflect(self.direct_init, self.width)
             for octet in data:
-                tblidx = (reg ^ octet) & 0xFF
-                reg = ((reg >> self.table_idx_width) ^ self.tbl[0][tblidx]) & self.mask
+                for i in range(8 // idx_width):
+                    tblidx = (reg ^ (octet >> (i * idx_width))) & table_mask
+                    reg = (table[tblidx] ^ (reg >> idx_width)) & self.mask
             reg = self.reflect(reg, self.width) & self.mask
+        else:
+            shift = self.width - idx_width
+            reg = self.direct_init & self.mask
+            for octet in data:
+                for i in range(8 // idx_width):
+                    part = (octet >> (8 - (i + 1) * idx_width)) & table_mask
+                    crc_high = reg >> shift if shift >= 0 else reg << (-shift)
+                    tblidx = (crc_high ^ part) & table_mask
+                    reg = (table[tblidx] ^ (reg << idx_width)) & self.mask
 
         if self.reflect_out:
             reg = self.reflect(reg, self.width)

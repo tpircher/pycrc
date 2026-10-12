@@ -11,6 +11,53 @@ from pycrc.algorithms import Crc
 from pycrc.models import CrcModels
 
 
+def test_table_driven_index_widths() -> None:
+    """table_driven() supports every index width that divides 8."""
+    for reflect in (False, True):
+        for tbl_idx_width in (1, 2, 4, 8):
+            algo = Crc(
+                width=8,
+                poly=0x07,
+                reflect_in=reflect,
+                xor_in=0,
+                reflect_out=reflect,
+                xor_out=0,
+                table_idx_width=tbl_idx_width,
+            )
+            assert algo.table_driven("123456789") == algo.bit_by_bit("123456789")
+
+
+def test_all_models_all_index_widths() -> None:
+    """table_driven() must agree with bit_by_bit() for every index width."""
+    for m in CrcModels().models:
+        for tbl_idx_width in (1, 2, 4, 8):
+            algo = Crc(
+                width=m.width,
+                poly=m.poly,
+                reflect_in=m.reflect_in,
+                xor_in=m.xor_in,
+                reflect_out=m.reflect_out,
+                xor_out=m.xor_out,
+                table_idx_width=tbl_idx_width,
+            )
+            assert algo.table_driven("123456789") == algo.bit_by_bit("123456789")
+
+
+def test_table_driven_rejects_non_divisor_index_width() -> None:
+    """An index width that does not divide 8 must be rejected."""
+    for tbl_idx_width in (3, 5, 6, 7, 16):
+        with pytest.raises(ValueError):
+            Crc(
+                width=8,
+                poly=0x07,
+                reflect_in=False,
+                xor_in=0,
+                reflect_out=False,
+                xor_out=0,
+                table_idx_width=tbl_idx_width,
+            )
+
+
 def test_from_model() -> None:
     """Crc.from_model/from_params must build the named model correctly."""
     params = CrcModels().get("crc-32")

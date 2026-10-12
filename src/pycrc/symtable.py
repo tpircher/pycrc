@@ -49,7 +49,13 @@ if TYPE_CHECKING:
 
 class SymbolTable:
     """
-    A class with the symbols as public members.
+    The rendering context for the code generator.
+
+    Despite the name this is not a mutable symbol table with name lookups: it
+    is an immutable bag of pre-computed, pre-formatted symbols (the C type
+    names, the reflect/init function names, the prefix strings, ...) that the
+    code generator emits. It is kept for backwards compatibility; new code may
+    refer to it as :data:`RenderContext`.
     """
 
     def __init__(self, opt: Options) -> None:
@@ -137,6 +143,10 @@ class SymbolTable:
         if self._crc_table_init is None:
             self._crc_table_init = _get_table_init(self._opt)
         return self._crc_table_init
+
+
+#: Preferred name for :class:`SymbolTable`, which better describes its role.
+RenderContext = SymbolTable
 
 
 def _pretty_str(value: int | str | None) -> str:

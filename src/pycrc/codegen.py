@@ -36,12 +36,28 @@ use as follows:
 
 from __future__ import annotations
 
+import weakref
 from collections.abc import Sequence
 
 import pycrc.expr as expr
-import pycrc.symtable
 from pycrc.opt import Options
 from pycrc.symtable import SymbolTable
+
+_symbol_tables: weakref.WeakKeyDictionary[Options, SymbolTable] = weakref.WeakKeyDictionary()
+
+
+def _get_symbol_table(opt: Options) -> SymbolTable:
+    """
+    Return the symbol table for *opt*, creating it on first use.
+
+    Every node in the generated code tree needs the same derived symbols, so
+    they are computed once per Options object instead of once per node.
+    """
+    sym = _symbol_tables.get(opt)
+    if sym is None:
+        sym = SymbolTable(opt)
+        _symbol_tables[opt] = sym
+    return sym
 
 
 class CodeGen:
@@ -57,7 +73,7 @@ class CodeGen:
         The class constructor.
         """
         self.opt: Options = opt
-        self.sym: SymbolTable = pycrc.symtable.SymbolTable(opt)
+        self.sym: SymbolTable = _get_symbol_table(opt)
         self.indent: str | None = indent
         self.content: Sequence[CodeGen | str] = content if content is not None else []
 

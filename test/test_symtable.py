@@ -2,7 +2,7 @@
 
 """Unit tests for the code generation symbol table helpers."""
 
-from pycrc import symtable
+from pycrc import codegen, symtable
 from pycrc.opt import Options
 
 
@@ -87,3 +87,12 @@ def test_underlying_crc_t_c89() -> None:
     assert symtable._get_underlying_crc_t(_opt(c_std="C89", width=8)) == "unsigned char"
     assert symtable._get_underlying_crc_t(_opt(c_std="C89", width=16)) == "unsigned int"
     assert symtable._get_underlying_crc_t(_opt(c_std="C89", width=32)) == "unsigned long int"
+
+
+def test_codegen_reuses_symbol_table() -> None:
+    """CodeGen nodes for the same options share a single SymbolTable."""
+    opt = Options()
+    first = codegen.CodeGen(opt, "")
+    second = codegen.CodeGen(opt, "")
+    assert first.sym is second.sym
+    assert symtable.RenderContext is symtable.SymbolTable

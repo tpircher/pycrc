@@ -5,6 +5,9 @@
 The tests for the legacy API live in ``test_algorithms_legacy.py``.
 """
 
+import binascii
+import zlib
+
 import pytest
 
 from pycrc.algorithms import Crc
@@ -159,3 +162,19 @@ def test_reflect_is_static() -> None:
     """reflect() can be called without an instance."""
     assert Crc.reflect(0x80, 8) == 0x01
     assert Crc.from_model("crc-32").reflect(0x01, 8) == 0x80
+
+
+def test_matches_zlib_crc32() -> None:
+    """The crc-32 model must match zlib.crc32."""
+    algo = Crc.from_model("crc-32")
+    for data in (b"", b"123456789", b"The quick brown fox jumps over the lazy dog"):
+        assert algo.bit_by_bit_fast(data) == zlib.crc32(data)
+        assert algo.table_driven(data) == zlib.crc32(data)
+
+
+def test_matches_binascii_crc_hqx() -> None:
+    """The xmodem model must match binascii.crc_hqx."""
+    algo = Crc.from_model("xmodem")
+    for data in (b"", b"123456789", b"The quick brown fox jumps over the lazy dog"):
+        assert algo.bit_by_bit_fast(data) == binascii.crc_hqx(data, 0)
+        assert algo.table_driven(data) == binascii.crc_hqx(data, 0)

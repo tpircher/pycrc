@@ -7,6 +7,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## UNRELEASED
 
+### Added
+
+- A typed `CrcParams` model, and a read-only `CrcModels` mapping from model
+  name to `CrcParams`
+- `Crc.from_model()` and `Crc.from_params()` constructors
+- A top-level `pycrc.crc()` convenience function and `Crc`, `CrcModels` and
+  `CrcParams` re-exports
+- An incremental `Crc.update()` / `Crc.digest()` API for streaming CRC
+  calculation
+- A PEP 561 `py.typed` marker so the inline type annotations are visible to
+  type checkers
+
 ### Changed
 
 - Minimum Python version is 3.10
@@ -17,6 +29,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Replace deprecated optparse with argparse
 - Add type annotations to the source and test code and a `mypy` configuration
 - Document how to run the tests in the README
+- `Crc.table_driven()` supports every table index width that divides 8
+  (i.e. 1, 2, 4 and 8)
+- `Crc` validates its constructor arguments and exposes `table_idx_width`
+  consistently (`tbl_idx_width` is kept as an alias)
+- `CrcModels.get_params()` keeps returning a mutable `dict`; the typed
+  `CrcParams` models are available through the new mapping interface
 
 ### Fixed
 

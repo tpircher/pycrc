@@ -45,6 +45,53 @@ Once installed you can also run it as a module:
     python3 -m pycrc [OPTIONS]
 
 
+## Python API
+
+pycrc can also be used as a Python library:
+
+    import pycrc
+
+    # One-shot checksum for a named model.
+    print(pycrc.crc("crc-32", b"123456789"))
+
+    from pycrc import Crc
+
+    # Or use a model directly, choosing one of the algorithms.
+    crc = Crc.from_model("crc-16-usb")
+    print(crc.bit_by_bit_fast("123456789"))
+    print(crc.table_driven(b"123456789"))
+
+    # Large inputs can be processed incrementally.
+    crc = Crc.from_model("crc-32")
+    with open("image.bin", "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            crc.update(chunk)
+    print(crc.digest())
+
+The known models are exposed as a read-only mapping:
+
+    from pycrc import CrcModels
+
+    models = CrcModels()
+    print(", ".join(models.names()))
+    params = models["crc-32"]
+    print(params.width, hex(params.poly), params.check)
+
+The package ships inline type annotations (PEP 561), so editors and type
+checkers can use them without any extra stub packages.
+
+### Backwards compatibility
+
+The Python API is additive: the API that existed before the typed models is
+still available.
+
+- ``CrcModels.get_params()`` still returns a mutable ``dict`` (a copy); the
+  immutable ``CrcParams`` objects are available through the mapping interface
+  (``models[name]`` / ``models.get(name)``).
+- ``Crc.tbl_idx_width`` and ``Crc.gen_table()`` remain available as aliases
+  for ``Crc.table_idx_width`` and ``Crc.table``.
+
+
 ## Development
 
 Create a virtual environment and install the package in editable mode together

@@ -63,26 +63,6 @@ from pycrc.models import CrcModels, CrcParams
 BytesLike: TypeAlias = str | bytes | bytearray
 
 
-def _require_int(name: str, value: object, minimum: int = 0) -> int:
-    """
-    Return *value* if it is an integer greater or equal to *minimum*.
-
-    Booleans are rejected even though they are integers in Python, because
-    passing one where a numeric parameter is expected is almost certainly a
-    mistake.
-    """
-    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
-        raise ValueError(f"{name} must be an integer >= {minimum}, got {value!r}")
-    return value
-
-
-def _coerce_bool(name: str, value: object) -> bool:
-    """Return *value* as a bool, rejecting values that are not bool/int."""
-    if not isinstance(value, (bool, int)):
-        raise ValueError(f"{name} must be a boolean, got {value!r}")
-    return bool(value)
-
-
 class Crc:
     """
     A base class for CRC routines.
@@ -123,16 +103,16 @@ class Crc:
         algorithms.
         """
 
-        self.width: int = _require_int("width", width, 1)
-        self.poly: int = _require_int("poly", poly)
-        self.reflect_in: bool = _coerce_bool("reflect_in", reflect_in)
-        self.xor_in: int = _require_int("xor_in", xor_in)
-        self.reflect_out: bool = _coerce_bool("reflect_out", reflect_out)
-        self.xor_out: int = _require_int("xor_out", xor_out)
-        self.slice_by: int = _require_int("slice_by", slice_by, 1)
+        self.width: int = width
+        self.poly: int = poly
+        self.reflect_in: bool = reflect_in
+        self.xor_in: int = xor_in
+        self.reflect_out: bool = reflect_out
+        self.xor_out: int = xor_out
+        self.slice_by: int = slice_by
         if table_idx_width is None:
             table_idx_width = 8
-        self.table_idx_width: int = _require_int("table_idx_width", table_idx_width, 1)
+        self.table_idx_width: int = table_idx_width
         if 8 % self.table_idx_width != 0:
             raise ValueError(f"table_idx_width must divide 8, got {self.table_idx_width}")
 

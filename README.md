@@ -134,9 +134,26 @@ runs in those subprocesses in the coverage report, point
     ruff check .
     mypy
 
+### Building the documentation
+
+The HTML manual and the man page are generated from the DocBook source in
+`doc`. On Debian/Ubuntu the required tools are installed with:
+
+    sudo apt-get install make xsltproc docbook-xsl-ns docbook5-xml
+
+Generate the documentation with:
+
+    make -C doc
+
+This writes `doc/pycrc.html`, `doc/pycrc.1` and the stylesheet
+`doc/docbook.css`. These generated files are not checked in.
+
 Build the source and wheel distributions with:
 
     python3 -m build
+
+The sdist target regenerates the documentation and includes the generated
+files in the source tarball.
 
 
 ## Getting help

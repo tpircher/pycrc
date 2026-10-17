@@ -58,12 +58,15 @@ include = [
     "/src",
     "/test",
     "/doc",
+    "/hatch_build.py",
     "/AUTHORS",
     "/CHANGELOG.md",
     "/LICENSE",
     "/README.md",
     "/pyproject.toml",
 ]
+
+[tool.hatch.build.targets.sdist.hooks.custom]
 
 [tool.pytest.ini_options]
 testpaths = ["test"]

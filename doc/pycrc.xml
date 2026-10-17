@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding="utf-8"?>
 
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V5.1//EN"
-        "http://www.oasis-open.org/docbook/xml/5.0b5/dtd/docbook.dtd" [
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML 5.0//EN"
+        "http://www.oasis-open.org/docbook/xml/5.0/dtd/docbook.dtd" [
 <!ENTITY project_version    "0.9.1">
 <!ENTITY project_homepage   "https://pycrc.org">
 <!ENTITY project_models     "https://pycrc.org/models.html">

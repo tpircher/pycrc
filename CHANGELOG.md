@@ -29,6 +29,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Replace deprecated optparse with argparse.
 - Add type annotations to the source and test code and a `mypy` configuration.
 - Document how to run the tests in the README.
+- Build the HTML manual and man page from the DocBook sources in `doc`
+  during the sdist build, and include the generated files in the source
+  distribution.
 - `Crc.table_driven()` supports every table index width that divides 8
   (i.e. 1, 2, 4 and 8).
 - `Crc` validates its constructor arguments and exposes `table_idx_width`

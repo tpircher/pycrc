@@ -3,7 +3,7 @@
 from pycrc.algorithms import Crc
 from pycrc.models import CrcModels, CrcParams
 
-__version__ = "0.11.0"
+__version__ = "0.12.0"
 __author__ = "Thomas Pircher"
 
 __all__ = ["Crc", "CrcModels", "CrcParams", "__author__", "__version__", "crc"]
